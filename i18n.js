@@ -396,9 +396,8 @@ function setLang(lang) {
   currentLang = lang;
   try { localStorage.setItem('ff_lang', lang); } catch {}
   applyI18n();
-  // Flip the switcher label
-  var btn = document.getElementById('langSwitcher');
-  if (btn) btn.textContent = t('lang_switch');
+  // The lang switcher is now a static two-pill group — its active state is
+  // managed by refreshLangSwitcherActive() in app.js, no textContent rewrite.
 }
 
 function applyI18n() {

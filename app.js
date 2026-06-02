@@ -744,22 +744,28 @@ function tripsReplay(entry) {
   setTimeout(() => document.getElementById('searchBtn').click(), 250);
 }
 
-// Update the count badge on the navbar button.
+// Update the count badge on the navbar button. Only saved (favourited)
+// trips contribute — recents don't deserve a notification dot since the
+// user didn't explicitly act on them.
 function tripsRefreshButton() {
   const el = document.getElementById('myTripsCount');
   if (!el) return;
-  const total = tripsLoad('recent').length + tripsLoad('saved').length;
-  el.textContent = total > 0 ? String(total) : '';
+  const savedCount = tripsLoad('saved').length;
+  el.textContent = savedCount > 0 ? String(savedCount) : '';
 }
 
-// Helper: short "5 min ago" / "2 days ago" style label.
+// Helper: short "5 min ago" / "2 days ago" style label. Handles plurals.
 function timeAgo(ts) {
   const diff = (Date.now() - ts) / 1000;
-  if (diff < 60)       return currentLang === 'es' ? 'ahora mismo' : 'just now';
-  if (diff < 3600)     return currentLang === 'es' ? `hace ${Math.round(diff/60)} min` : `${Math.round(diff/60)} min ago`;
-  if (diff < 86400)    return currentLang === 'es' ? `hace ${Math.round(diff/3600)} h` : `${Math.round(diff/3600)} h ago`;
-  if (diff < 86400*30) return currentLang === 'es' ? `hace ${Math.round(diff/86400)} días` : `${Math.round(diff/86400)} days ago`;
-  return new Date(ts).toLocaleDateString(currentLang === 'es' ? 'es-ES' : 'en-GB', { day:'numeric', month:'short' });
+  const es   = currentLang === 'es';
+  if (diff < 60)    return es ? 'ahora mismo' : 'just now';
+  if (diff < 3600)  return es ? `hace ${Math.round(diff/60)} min` : `${Math.round(diff/60)} min ago`;
+  if (diff < 86400) return es ? `hace ${Math.round(diff/3600)} h`  : `${Math.round(diff/3600)} h ago`;
+  if (diff < 86400*30) {
+    const d = Math.round(diff/86400);
+    return es ? `hace ${d} ${d === 1 ? 'día' : 'días'}` : `${d} ${d === 1 ? 'day' : 'days'} ago`;
+  }
+  return new Date(ts).toLocaleDateString(es ? 'es-ES' : 'en-GB', { day:'numeric', month:'short' });
 }
 
 function tripsRenderDropdown() {

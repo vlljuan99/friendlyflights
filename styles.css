@@ -64,18 +64,26 @@ body { font-family: var(--font); background: var(--gray-50); color: var(--gray-8
 }
 .my-trips-count:empty { display: none; }
 
+/* position: fixed so we escape the navbar's backdrop-filter stacking
+   context (iOS Safari clips absolute-positioned descendants of a
+   backdrop-filtered ancestor). Anchored to the viewport's top-right
+   instead of the button. */
 .my-trips-dropdown {
-  position: absolute; top: calc(100% + 8px); right: 0;
-  width: 360px; max-height: 75vh; overflow-y: auto;
+  position: fixed; top: 64px; right: 12px;
+  width: 360px; max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 80px); overflow-y: auto;
   background: white; border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius); box-shadow: 0 8px 24px rgba(15,23,42,.14);
-  padding: 6px; z-index: 200; display: none;
+  border-radius: var(--radius); box-shadow: 0 10px 28px rgba(15,23,42,.18);
+  padding: 6px; z-index: 250; display: none;
   font-family: var(--font);
+  -webkit-overflow-scrolling: touch;
 }
 .my-trips-dropdown.open { display: block; animation: slideIn .15s ease; }
 @media (max-width: 640px) {
-  .my-trips-dropdown { width: calc(100vw - 16px); right: -8px; max-width: 380px; }
+  .my-trips-dropdown { right: 8px; max-width: calc(100vw - 16px); }
 }
+/* iOS / Safari: ensure the button receives taps and has a clear feedback */
+.btn-trips { -webkit-tap-highlight-color: rgba(7,112,227,.18); }
 
 .my-trips-section        { margin-bottom: 4px; }
 .my-trips-section + .my-trips-section { border-top: 1px solid var(--gray-100); padding-top: 4px; margin-top: 4px; }

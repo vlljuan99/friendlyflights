@@ -44,6 +44,88 @@ body { font-family: var(--font); background: var(--gray-50); color: var(--gray-8
   transition: background .15s !important;
 }
 .btn-ghost:hover { background: var(--blue-light) !important; }
+/* My Trips — navbar dropdown for recent + saved searches (localStorage). */
+.my-trips-wrap { position: relative; display: inline-block; }
+.btn-trips {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 34px; box-sizing: border-box;
+  background: var(--gray-100); border: 1.5px solid var(--gray-200);
+  color: var(--gray-600); padding: 4px 13px; border-radius: 20px;
+  font: 700 13px var(--font); font-family: var(--font); cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.btn-trips:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.btn-trips[aria-expanded="true"] { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.my-trips-icon  { font-size: 14px; line-height: 1; }
+.my-trips-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--blue); color: white; font-size: 10px; font-weight: 800;
+  border-radius: 10px; padding: 1px 6px; min-width: 18px; line-height: 1.2;
+}
+.my-trips-count:empty { display: none; }
+
+.my-trips-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 360px; max-height: 75vh; overflow-y: auto;
+  background: white; border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius); box-shadow: 0 8px 24px rgba(15,23,42,.14);
+  padding: 6px; z-index: 200; display: none;
+  font-family: var(--font);
+}
+.my-trips-dropdown.open { display: block; animation: slideIn .15s ease; }
+@media (max-width: 640px) {
+  .my-trips-dropdown { width: calc(100vw - 16px); right: -8px; max-width: 380px; }
+}
+
+.my-trips-section        { margin-bottom: 4px; }
+.my-trips-section + .my-trips-section { border-top: 1px solid var(--gray-100); padding-top: 4px; margin-top: 4px; }
+.my-trips-section-title  { font-size: 11px; font-weight: 800; color: var(--gray-400);
+  text-transform: uppercase; letter-spacing: .5px; padding: 8px 10px 6px; }
+.my-trips-entry {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 8px 10px; border-radius: 8px;
+  cursor: pointer; text-align: left; transition: background .12s;
+}
+.my-trips-entry:hover, .my-trips-entry:focus { background: var(--blue-light); outline: none; }
+.my-trips-entry-main  { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.my-trips-entry-title { font-size: 13px; font-weight: 700; color: var(--gray-800);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.my-trips-entry-meta  { font-size: 11px; color: var(--gray-600); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.my-trips-entry-age   { font-size: 10px; color: var(--gray-400); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .3px; }
+.my-trips-delete {
+  background: none; border: none;
+  color: var(--gray-400); font-size: 14px; font-weight: 700;
+  padding: 4px 8px; border-radius: 6px; cursor: pointer; flex-shrink: 0;
+  transition: background .12s, color .12s;
+}
+.my-trips-delete:hover { background: var(--red); color: white; }
+
+.my-trips-empty { padding: 28px 18px; text-align: center; color: var(--gray-400); font-size: 13px; line-height: 1.5; }
+.my-trips-clear {
+  width: calc(100% - 12px); margin: 4px 6px 2px; padding: 6px;
+  background: none; border: none; color: var(--gray-400);
+  font: 600 11px var(--font); cursor: pointer; border-radius: 6px;
+}
+.my-trips-clear:hover { color: var(--red); background: var(--gray-50); }
+
+/* Save-trip button in the results header */
+.results-header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.btn-save-trip {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 8px 14px; min-height: 36px; box-sizing: border-box;
+  background: white; border: 1.5px solid var(--gray-200); border-radius: 20px;
+  color: var(--gray-700); font: 700 13px var(--font); cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.btn-save-trip:hover  { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.btn-save-trip.saved  { background: var(--green); color: white; border-color: var(--green); }
+@media (max-width: 640px) {
+  .btn-save-trip      { padding: 7px 10px; font-size: 12px; }
+  .btn-edit-search    { padding: 7px 10px; font-size: 12px; }
+}
+
 /* Language switcher — two side-by-side pills with the active language
    filled in blue. Both languages are always visible so users can switch
    with a single tap. */
@@ -461,8 +543,14 @@ button, a, input, select, [role="button"] {
 
   /* ----- NAV ----- */
   .nav-inner  { padding: 0 16px; height: 54px; }
-  .nav-links  { gap: 10px; }
+  .nav-links  { gap: 8px; }
   .nav-links a:not(.btn-ghost) { display: none; }
+  /* Compact the My Trips button — keep just the icon + count so the logo
+     and the language switcher still fit comfortably on narrow phones. */
+  .btn-trips        { padding: 4px 10px; }
+  .my-trips-text    { display: none; }
+  /* Slightly smaller logo text on phones too, to leave more room. */
+  .logo-text        { font-size: 16px; }
   .logo-text  { font-size: 16px; }
   .btn-ghost  { padding: 6px 14px; font-size: 13px; }
 

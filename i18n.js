@@ -14,6 +14,17 @@ var STRINGS = {
     nav_signin: 'Sign in',
     lang_switch:'🇪🇸 ES',
 
+    // ── My trips ──────────────────────────────────────────────────
+    my_trips_label:   'My trips',
+    my_trips_recent:  '🕒 Recent searches',
+    my_trips_saved:   '⭐ Saved',
+    my_trips_empty:   'Nothing saved yet — your searches and favourites will appear here.',
+    my_trips_clear:   'Clear recents',
+    save_trip:        '⭐ Save trip',
+    trip_saved:       '⭐ Trip saved',
+    trip_already_saved: 'Already in your saved trips',
+    label_delete:     'Delete',
+
     // ── Hero ──────────────────────────────────────────────────────
     hero_h1:  'Fly together from <em>anywhere</em>',
     hero_sub: 'Everyone searches from their own city. We find the best flight combination for the whole group — automatically.',
@@ -200,6 +211,17 @@ var STRINGS = {
     nav_how:    'Cómo funciona',
     nav_signin: 'Iniciar sesión',
     lang_switch:'🇬🇧 EN',
+
+    // ── My trips ──────────────────────────────────────────────────
+    my_trips_label:   'Mis viajes',
+    my_trips_recent:  '🕒 Búsquedas recientes',
+    my_trips_saved:   '⭐ Guardados',
+    my_trips_empty:   'Aún no hay nada — aquí aparecerán tus búsquedas y favoritos.',
+    my_trips_clear:   'Limpiar recientes',
+    save_trip:        '⭐ Guardar viaje',
+    trip_saved:       '⭐ Viaje guardado',
+    trip_already_saved: 'Ya está en tus viajes guardados',
+    label_delete:     'Eliminar',
 
     // ── Hero ──────────────────────────────────────────────────────
     hero_h1:  'Volad juntos desde <em>cualquier lugar</em>',

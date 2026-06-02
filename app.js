@@ -203,6 +203,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('copyBtn').addEventListener('click', copyLinks);
   document.getElementById('imgBtn')?.addEventListener('click', shareAsImage);
 
+  // My Trips dropdown + Save button.
+  document.getElementById('myTripsBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    tripsToggleDropdown();
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.my-trips-wrap')) tripsCloseDropdown();
+  });
+  document.getElementById('saveTripBtn')?.addEventListener('click', tripsSaveCurrent);
+  tripsRefreshButton();
+
   // Language switcher — two pills (ES / EN). Highlight the active one and
   // wire each to a specific language so a single tap switches.
   refreshLangSwitcherActive();
@@ -512,6 +523,8 @@ async function runSearch() {
   // sees the "no results" panel deep inside the results view.
   const totalOut = outResults.reduce((s, r) => s + r.length, 0);
   if (totalOut === 0) showToast(t('error_no_flights'), true);
+  // Add this search to the user's "Recent" list (localStorage, no backend).
+  else tripsAddRecent();
 
   document.querySelector('.hero').style.display = 'none';
   document.querySelector('.search-panel-section').style.display = 'none';
@@ -610,6 +623,221 @@ function refreshLangSwitcherActive() {
   document.querySelectorAll('#langSwitcher .lang-pill').forEach(pill => {
     pill.classList.toggle('active', pill.dataset.lang === currentLang);
   });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// MY TRIPS — recent searches (auto) + saved favourites (explicit).
+// Both live in localStorage so there's no backend / no login required.
+// One dropdown in the navbar lists both sections.
+// ──────────────────────────────────────────────────────────────────
+const TRIPS_KEYS = { recent: 'ff_recent_v1', saved: 'ff_saved_v1' };
+const TRIPS_MAX  = { recent: 10, saved: 30 };
+
+function tripsLoad(kind) {
+  try {
+    const raw = localStorage.getItem(TRIPS_KEYS[kind]);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function tripsSave(kind, list) {
+  try { localStorage.setItem(TRIPS_KEYS[kind], JSON.stringify(list.slice(0, TRIPS_MAX[kind]))); }
+  catch (e) { console.warn('[trips] localStorage write failed:', e.message); }
+}
+
+// Build a snapshot of the current search params (no flight results — those
+// are refetched on replay so prices stay live).
+function tripsSnapshot() {
+  if (!lastSearch) return null;
+  return {
+    id: Date.now() + Math.random(),
+    ts: Date.now(),
+    travelers: travelers.map(t => ({
+      name: t.name, airportCode: t.airportCode, airportCity: t.airportCity, pax: t.pax || 1,
+    })),
+    destCode: lastSearch.destCode,
+    destCity: lastSearch.destCity,
+    depDate:  lastSearch.depDate,
+    retDate:  lastSearch.retDate || null,
+    flexDep:  lastSearch.flexDep || 0,
+    flexRet:  lastSearch.flexRet || 0,
+  };
+}
+
+// Unique signature for de-dup (so the same search doesn't pile up).
+function tripsKey(entry) {
+  const origins = entry.travelers.map(t => t.airportCode).sort().join(',');
+  return `${origins}|${entry.destCode}|${entry.depDate}|${entry.retDate||''}|${entry.flexDep}|${entry.flexRet}`;
+}
+
+function tripsAddRecent() {
+  const snap = tripsSnapshot();
+  if (!snap) return;
+  const key = tripsKey(snap);
+  const recent = tripsLoad('recent').filter(e => tripsKey(e) !== key);
+  recent.unshift(snap);
+  tripsSave('recent', recent);
+  tripsRefreshButton();
+}
+
+function tripsSaveCurrent() {
+  const snap = tripsSnapshot();
+  if (!snap) { showToast(t('error_no_flights'), true); return; }
+  const key   = tripsKey(snap);
+  const saved = tripsLoad('saved');
+  if (saved.find(e => tripsKey(e) === key)) {
+    showToast(t('trip_already_saved'), false);
+    return;
+  }
+  // Auto-label: destination + month/year (the meta line under the title
+  // shows the full date range and origins, so we keep the title concise).
+  const monthYear = new Date(snap.depDate + 'T12:00:00').toLocaleDateString(
+    currentLang === 'es' ? 'es-ES' : 'en-GB',
+    { month: 'long', year: 'numeric' }
+  );
+  snap.label = `${snap.destCity} · ${monthYear}`;
+  saved.unshift(snap);
+  tripsSave('saved', saved);
+  showToast(t('trip_saved'));
+  tripsRefreshButton();
+  // Visual feedback on the button
+  const btn = document.getElementById('saveTripBtn');
+  if (btn) { btn.classList.add('saved'); setTimeout(() => btn.classList.remove('saved'), 1200); }
+}
+
+function tripsDeleteSaved(id) {
+  const saved = tripsLoad('saved').filter(e => String(e.id) !== String(id));
+  tripsSave('saved', saved);
+  tripsRefreshButton();
+  tripsRenderDropdown();   // refresh the open dropdown
+}
+
+function tripsClearRecent() {
+  tripsSave('recent', []);
+  tripsRefreshButton();
+  tripsRenderDropdown();
+}
+
+// Populate the search form from a saved/recent entry and re-run the search.
+function tripsReplay(entry) {
+  travelers = entry.travelers.map((s, i) => ({
+    id: Date.now() + Math.random() + i,
+    name: s.name, airportCode: s.airportCode, airportCity: s.airportCity,
+    colorClass: COLORS[i % COLORS.length],
+    pax: s.pax || 1,
+  }));
+  renderTravelers();
+
+  const di = document.getElementById('destinationInput');
+  di.dataset.selectedCode = entry.destCode;
+  di.dataset.selectedCity = entry.destCity;
+  di.value = `${entry.destCity} (${entry.destCode})`;
+  document.getElementById('departureDate').value = entry.depDate || '';
+  document.getElementById('returnDate').value    = entry.retDate || '';
+  document.getElementById('flexDep').value       = String(entry.flexDep || 0);
+  document.getElementById('flexRet').value       = String(entry.flexRet || 0);
+
+  tripsCloseDropdown();
+  // If we're in results view, go back to the search panel so the user sees
+  // what got pre-filled before the loader overlay covers it.
+  if (document.getElementById('resultsSection').style.display === 'block') editSearch();
+  setTimeout(() => document.getElementById('searchBtn').click(), 250);
+}
+
+// Update the count badge on the navbar button.
+function tripsRefreshButton() {
+  const el = document.getElementById('myTripsCount');
+  if (!el) return;
+  const total = tripsLoad('recent').length + tripsLoad('saved').length;
+  el.textContent = total > 0 ? String(total) : '';
+}
+
+// Helper: short "5 min ago" / "2 days ago" style label.
+function timeAgo(ts) {
+  const diff = (Date.now() - ts) / 1000;
+  if (diff < 60)       return currentLang === 'es' ? 'ahora mismo' : 'just now';
+  if (diff < 3600)     return currentLang === 'es' ? `hace ${Math.round(diff/60)} min` : `${Math.round(diff/60)} min ago`;
+  if (diff < 86400)    return currentLang === 'es' ? `hace ${Math.round(diff/3600)} h` : `${Math.round(diff/3600)} h ago`;
+  if (diff < 86400*30) return currentLang === 'es' ? `hace ${Math.round(diff/86400)} días` : `${Math.round(diff/86400)} days ago`;
+  return new Date(ts).toLocaleDateString(currentLang === 'es' ? 'es-ES' : 'en-GB', { day:'numeric', month:'short' });
+}
+
+function tripsRenderDropdown() {
+  const dropdown = document.getElementById('myTripsDropdown');
+  if (!dropdown) return;
+  const recent = tripsLoad('recent');
+  const saved  = tripsLoad('saved');
+
+  if (!recent.length && !saved.length) {
+    dropdown.innerHTML = `<div class="my-trips-empty">${t('my_trips_empty')}</div>`;
+    return;
+  }
+
+  const renderEntry = (e, isSaved) => {
+    const origins   = e.travelers.map(t => t.airportCode).join(' · ');
+    const range     = e.retDate ? `${formatDateMedium(e.depDate)} → ${formatDateMedium(e.retDate)}` : formatDateMedium(e.depDate);
+    const titleText = isSaved && e.label ? e.label : `${e.destCity} (${e.destCode})`;
+    const ago       = timeAgo(e.ts);
+    return `
+      <div class="my-trips-entry" data-kind="${isSaved ? 'saved' : 'recent'}" data-id="${e.id}" role="menuitem" tabindex="0">
+        <div class="my-trips-entry-main">
+          <div class="my-trips-entry-title">${escHtml(titleText)}</div>
+          <div class="my-trips-entry-meta">${escHtml(origins)} → ${escHtml(e.destCode)} · ${escHtml(range)}</div>
+          <div class="my-trips-entry-age">${escHtml(ago)}</div>
+        </div>
+        ${isSaved
+          ? `<button class="my-trips-delete" data-del="${e.id}" aria-label="${t('label_delete')}">✕</button>`
+          : ''}
+      </div>`;
+  };
+
+  let html = '';
+  if (saved.length) {
+    html += `
+      <div class="my-trips-section">
+        <div class="my-trips-section-title">${t('my_trips_saved')}</div>
+        ${saved.map(e => renderEntry(e, true)).join('')}
+      </div>`;
+  }
+  if (recent.length) {
+    html += `
+      <div class="my-trips-section">
+        <div class="my-trips-section-title">${t('my_trips_recent')}</div>
+        ${recent.map(e => renderEntry(e, false)).join('')}
+        <button class="my-trips-clear" id="clearRecentBtn">${t('my_trips_clear')}</button>
+      </div>`;
+  }
+  dropdown.innerHTML = html;
+
+  // Wire entry clicks (the row picks, the × deletes).
+  dropdown.querySelectorAll('.my-trips-entry').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.my-trips-delete')) return;
+      const list = row.dataset.kind === 'saved' ? saved : recent;
+      const entry = list.find(x => String(x.id) === row.dataset.id);
+      if (entry) tripsReplay(entry);
+    });
+  });
+  dropdown.querySelectorAll('.my-trips-delete').forEach(x => {
+    x.addEventListener('click', e => {
+      e.stopPropagation();
+      tripsDeleteSaved(x.dataset.del);
+    });
+  });
+  dropdown.querySelector('#clearRecentBtn')?.addEventListener('click', tripsClearRecent);
+}
+
+function tripsToggleDropdown() {
+  const dropdown = document.getElementById('myTripsDropdown');
+  const btn = document.getElementById('myTripsBtn');
+  const open = !dropdown.classList.contains('open');
+  if (open) tripsRenderDropdown();
+  dropdown.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function tripsCloseDropdown() {
+  document.getElementById('myTripsDropdown')?.classList.remove('open');
+  document.getElementById('myTripsBtn')?.setAttribute('aria-expanded', 'false');
 }
 
 // Offsets to fetch around a base date for ±N flexibility (excludes 0,

@@ -22,7 +22,14 @@
     </div>
     <div class="nav-links">
       <a href="#howSection" data-i18n="nav_how">How it works</a>
-      <a href="#" class="btn-ghost" data-i18n="nav_signin">Sign in</a>
+      <div class="my-trips-wrap">
+        <button class="btn-trips" id="myTripsBtn" type="button" aria-haspopup="true" aria-expanded="false">
+          <span class="my-trips-icon">⭐</span>
+          <span class="my-trips-text" data-i18n="my_trips_label">My trips</span>
+          <span class="my-trips-count" id="myTripsCount"></span>
+        </button>
+        <div class="my-trips-dropdown" id="myTripsDropdown" role="menu"></div>
+      </div>
       <div class="lang-switcher" id="langSwitcher" role="tablist" aria-label="Language">
         <button class="lang-pill" data-lang="es" type="button">🇪🇸 ES</button>
         <button class="lang-pill" data-lang="en" type="button">🇬🇧 EN</button>
@@ -115,7 +122,10 @@
         <h2 id="resultsTitle"></h2>
         <p id="resultsSubtitle" class="results-sub"></p>
       </div>
-      <button class="btn-edit-search" id="editSearchBtn" data-i18n="edit_search">✏️ Edit search</button>
+      <div class="results-header-actions">
+        <button class="btn-save-trip" id="saveTripBtn" type="button" data-i18n="save_trip">⭐ Save trip</button>
+        <button class="btn-edit-search" id="editSearchBtn" data-i18n="edit_search">✏️ Edit search</button>
+      </div>
     </div>
 
     <!-- Share — at the top so it's always one click away -->

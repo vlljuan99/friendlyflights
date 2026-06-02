@@ -132,7 +132,23 @@
       </div>
     </div>
 
-    <!-- Share — at the top so it's always one click away -->
+    <!-- Filters bar — visible no matter which view, so the direct-only toggle is always one tap away -->
+    <div class="filters-bar" id="filtersBar">
+      <label class="direct-switch" for="directOnlySwitch">
+        <input type="checkbox" id="directOnlySwitch" />
+        <span class="direct-switch-track"><span class="direct-switch-knob"></span></span>
+        <span class="direct-switch-label">
+          <span class="direct-switch-icon">✈</span>
+          <span data-i18n="direct_only">Only direct flights</span>
+        </span>
+        <span class="direct-switch-count" id="directSwitchCount"></span>
+      </label>
+    </div>
+
+    <!-- Per-traveler itinerary (the chosen flights) -->
+    <div class="itinerary-section" id="itinerarySection"></div>
+
+    <!-- Share — placed under the main itinerary, where it's clearly part of the result -->
     <div class="share-bar" id="shareBar">
       <div class="share-bar-left">
         <span class="share-bar-icon">💬</span>
@@ -144,9 +160,6 @@
         <button class="btn-share btn-img"      id="imgBtn"><span data-i18n="save_img">📸 Save as image</span></button>
       </div>
     </div>
-
-    <!-- Per-traveler itinerary (the chosen flights) -->
-    <div class="itinerary-section" id="itinerarySection"></div>
 
     <!-- View selector — pick which section to view -->
     <div class="view-tabs" id="viewTabs" role="tablist"></div>

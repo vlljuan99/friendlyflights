@@ -63,6 +63,9 @@ var STRINGS = {
     // ── Share as image ────────────────────────────────────────────
     save_img:     '📸 Save as image',
     saving_img:   '⏳ Generating…',
+    saved_img_ok: '✅ Image ready',
+    save_img_failed:'Could not generate the image. Please try again.',
+    ios_save_hint:'Long-press the image and choose "Save to Photos" 📲',
 
     // ── Loading ───────────────────────────────────────────────────
     loading_text: 'Searching flights for everyone…',
@@ -99,7 +102,8 @@ var STRINGS = {
     sort_total: '€ Total price',
     sort_fair:  '⚖ Fairest',
     sort_quick: '⚡ Quickest',
-    direct_only:'✈ Direct only',
+    direct_only:'Only direct flights',
+    direct_none:'No direct',
 
     // ── Combo cards ───────────────────────────────────────────────
     badge_best:       '★ Best pick',
@@ -121,6 +125,8 @@ var STRINGS = {
     error_no_flights:   'No flights found for this search.',
     no_direct_flights:  'No direct flights found for this route combination.',
     no_direct_hint:     'Remove the filter to see all available flights.',
+    no_direct_in_dir:        'No direct flights on this route',
+    no_direct_in_dir_hint:   function (n) { return n + (n === 1 ? ' flight with stop-overs available — remove the filter to see it.' : ' flights with stop-overs available — remove the filter to see them.'); },
     show_all_flights:   'Show all flights',
 
     // ── Deep links ────────────────────────────────────────────────
@@ -264,6 +270,9 @@ var STRINGS = {
     // ── Share as image ────────────────────────────────────────────
     save_img:     '📸 Guardar imagen',
     saving_img:   '⏳ Generando…',
+    saved_img_ok: '✅ Imagen lista',
+    save_img_failed:'No se pudo generar la imagen. Inténtalo de nuevo.',
+    ios_save_hint:'Mantén pulsada la imagen y elige "Guardar en Fotos" 📲',
 
     // ── Loading ───────────────────────────────────────────────────
     loading_text: 'Buscando vuelos para todos…',
@@ -300,7 +309,8 @@ var STRINGS = {
     sort_total: '€ Precio total',
     sort_fair:  '⚖ Más equitativo',
     sort_quick: '⚡ Más rápido',
-    direct_only:'✈ Solo directos',
+    direct_only:'Sólo vuelos directos',
+    direct_none:'Sin directos',
 
     // ── Combo cards ───────────────────────────────────────────────
     badge_best:      '★ Mejor opción',
@@ -322,6 +332,8 @@ var STRINGS = {
     error_no_flights:   'No hemos encontrado vuelos para esta búsqueda.',
     no_direct_flights:  'No hay vuelos directos disponibles para esta combinación de rutas.',
     no_direct_hint:     'Quita el filtro para ver todos los vuelos disponibles.',
+    no_direct_in_dir:        'No hay vuelos directos en esta ruta',
+    no_direct_in_dir_hint:   function (n) { return 'Hay ' + n + (n === 1 ? ' vuelo con escala disponible — quita el filtro para verlo.' : ' vuelos con escala disponibles — quita el filtro para verlos.'); },
     show_all_flights:   'Ver todos los vuelos',
 
     // ── Deep links ────────────────────────────────────────────────

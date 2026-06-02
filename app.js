@@ -203,6 +203,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('copyBtn').addEventListener('click', copyLinks);
   document.getElementById('imgBtn')?.addEventListener('click', shareAsImage);
 
+  // Direct-only switch (always visible above results).
+  document.getElementById('directOnlySwitch')?.addEventListener('change', e => {
+    directOnly = e.target.checked;
+    const combos = buildCombinations(travelers);
+    scoredCombos = scoreCombinations(combos);
+    renderSortBar();
+    renderCombinations();
+    renderItinerarySection();
+    renderAllFlightsSection();
+    refreshDirectSwitchCount();
+  });
+
   // My Trips dropdown + Save button.
   document.getElementById('myTripsBtn')?.addEventListener('click', e => {
     e.stopPropagation();
@@ -1120,6 +1132,27 @@ function renderAllFlightsSection() {
            <span class="aft-show-more-count">+${remaining}</span>
          </button>`
       : '';
+    // Distinguish three empty states: no flights at all, no direct flights
+    // (but stop-overs exist and the user has the filter on), or just no
+    // cards yet on this slice (shouldn't really happen).
+    let emptyHtml = '';
+    if (!cards) {
+      const rawCount = (list || []).length;
+      if (directOnly && rawCount > 0) {
+        // The filter is hiding everything for this direction.
+        emptyHtml = `
+          <div class="aft-empty aft-empty-direct">
+            <div class="aft-empty-icon">✈</div>
+            <div class="aft-empty-text">
+              <strong>${t('no_direct_in_dir')}</strong>
+              <span>${t('no_direct_in_dir_hint', rawCount)}</span>
+            </div>
+            <button class="aft-empty-cta" data-action="show-all" type="button">${t('show_all_flights')}</button>
+          </div>`;
+      } else {
+        emptyHtml = `<div class="aft-empty">${t('itin_noresult')}</div>`;
+      }
+    }
     return `
       <div class="aft-direction-block">
         <div class="aft-direction-header">
@@ -1127,7 +1160,7 @@ function renderAllFlightsSection() {
           <span class="aft-dir-route">${escHtml(fromCode)} → ${escHtml(toCode)}</span>
         </div>
         <div class="aft-flights">
-          ${cards || `<div class="aft-empty">${t('itin_noresult')}</div>`}
+          ${cards || emptyHtml}
         </div>
         ${moreBtn}
       </div>`;
@@ -1184,6 +1217,24 @@ function renderAllFlightsSection() {
       renderAllFlightsSection();
     });
   });
+
+  // "Show all flights" CTA inside the direct-only empty state.
+  section.querySelectorAll('[data-action="show-all"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      directOnly = false;
+      const sw = document.getElementById('directOnlySwitch');
+      if (sw) sw.checked = false;
+      const combos = buildCombinations(travelers);
+      scoredCombos = scoreCombinations(combos);
+      renderSortBar();
+      renderCombinations();
+      renderItinerarySection();
+      renderAllFlightsSection();
+      refreshDirectSwitchCount();
+    });
+  });
+
+  refreshDirectSwitchCount();
 
   // Card clicks — promote that flight to the front of its array.
   section.querySelectorAll('.flight-pick-card').forEach(card => {
@@ -1423,6 +1474,8 @@ function refreshFlexGrid(tvlId, isRet) {
 }
 
 // ── Sort bar ─────────────────────────────────
+// The direct-only toggle used to live here, but it's been promoted to a
+// prominent switch in the global filters bar (visible across all views).
 function renderSortBar() {
   const bar = document.getElementById('sortBar');
   bar.innerHTML = `
@@ -1430,9 +1483,7 @@ function renderSortBar() {
     <button class="sort-btn${currentSort === 'value' ? ' active' : ''}" data-sort="value">${t('sort_value')}</button>
     <button class="sort-btn${currentSort === 'total' ? ' active' : ''}" data-sort="total">${t('sort_total')}</button>
     <button class="sort-btn${currentSort === 'fair'  ? ' active' : ''}" data-sort="fair" >${t('sort_fair')}</button>
-    <button class="sort-btn${currentSort === 'quick' ? ' active' : ''}" data-sort="quick">${t('sort_quick')}</button>
-    <div class="sort-divider"></div>
-    <button class="sort-btn direct-toggle${directOnly ? ' active' : ''}" id="directOnlyBtn">${t('direct_only')}</button>`;
+    <button class="sort-btn${currentSort === 'quick' ? ' active' : ''}" data-sort="quick">${t('sort_quick')}</button>`;
 
   bar.querySelectorAll('.sort-btn[data-sort]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1441,16 +1492,31 @@ function renderSortBar() {
       renderCombinations();
     });
   });
+}
 
-  bar.querySelector('#directOnlyBtn').addEventListener('click', () => {
-    directOnly = !directOnly;
-    const combos = buildCombinations(travelers);
-    scoredCombos = scoreCombinations(combos);
-    renderSortBar();
-    renderCombinations();
-    renderItinerarySection();
-    renderAllFlightsSection();
-  });
+// Keep the global filters-bar switch in sync with state + show a small hint
+// of how many directs exist across all travelers (both directions).
+function refreshDirectSwitchCount() {
+  const sw    = document.getElementById('directOnlySwitch');
+  const count = document.getElementById('directSwitchCount');
+  if (!sw || !count) return;
+  sw.checked = directOnly;
+  let directs = 0;
+  let total   = 0;
+  for (const tvl of travelers) {
+    for (const list of [tvl.flights || [], tvl.returnFlights || []]) {
+      total   += list.length;
+      directs += list.filter(f => f.stops === 0).length;
+    }
+  }
+  if (!total) { count.textContent = ''; count.removeAttribute('data-state'); return; }
+  if (!directs) {
+    count.textContent = t('direct_none');
+    count.dataset.state = 'none';
+  } else {
+    count.textContent = `${directs}`;
+    count.dataset.state = 'has';
+  }
 }
 
 // ── Combination grid ─────────────────────────
@@ -1469,12 +1535,15 @@ function renderCombinations() {
         </div>`;
       container.querySelector('#clearDirectFilter')?.addEventListener('click', () => {
         directOnly = false;
+        const sw = document.getElementById('directOnlySwitch');
+        if (sw) sw.checked = false;
         const combos = buildCombinations(travelers);
         scoredCombos = scoreCombinations(combos);
         renderSortBar();
         renderCombinations();
         renderItinerarySection();
         renderAllFlightsSection();
+        refreshDirectSwitchCount();
       });
     } else {
       const noFlight = travelers.filter(t => !t.flights?.length).map(t => t.name).join(', ');
@@ -1829,49 +1898,125 @@ function toSkyDate(iso) {
 // ──────────────────────────────────────────────
 // SHARE AS IMAGE
 // ──────────────────────────────────────────────
+// Detecting iOS — covers iPhone, iPad (incl. iPad-as-Mac), and any browser on
+// iOS (Chrome, Firefox, Edge, etc.), since they all run WebKit underneath.
+function isIOS() {
+  const ua = navigator.userAgent || '';
+  return /iPad|iPhone|iPod/.test(ua) ||
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
 async function shareAsImage() {
-  const btn = document.getElementById('imgBtn');
+  const btn     = document.getElementById('imgBtn');
   const btnSpan = btn?.querySelector('span');
+  const section = document.getElementById('itinerarySection');
+  if (!section) return;
+
   if (btnSpan) btnSpan.textContent = t('saving_img');
   if (btn) btn.disabled = true;
 
+  // Pre-open a tab synchronously on iOS so the popup blocker doesn't kill it
+  // once we've awaited html2canvas. We'll either point it at the rendered
+  // image or close it on failure / when native share takes over.
+  const ios = isIOS();
+  const earlyTab = ios ? window.open('about:blank', '_blank') : null;
+
+  let stylesHidden = false;
   try {
-    const section = document.getElementById('itinerarySection');
-    // Temporarily hide flex grids and book buttons for a cleaner capture
     section.classList.add('capturing');
+    stylesHidden = true;
+
     const canvas = await html2canvas(section, {
-      scale:           2,
+      scale:           Math.min(2, window.devicePixelRatio || 2),
       backgroundColor: '#f8f9fb',
       useCORS:         true,
       logging:         false,
       allowTaint:      false,
     });
     section.classList.remove('capturing');
+    stylesHidden = false;
 
     const filename = `FriendlyFlights-${(lastSearch?.destCity || 'trip').replace(/\s+/g,'-')}-${lastSearch?.depDate || ''}.png`;
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
 
-    // Try native share (iOS / Android)
+    // Try the native Web Share API first — Safari on iOS supports file sharing,
+    // and Android Chrome does too. iOS Chrome historically doesn't, hence the
+    // earlyTab fallback below.
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if (!blob) throw new Error('toBlob returned null');
+
     if (navigator.share && navigator.canShare) {
-      const file = new File([blob], filename, { type: 'image/png' });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: `FriendlyFlights — ${lastSearch?.destCity}` });
-        return;
+      try {
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          earlyTab && earlyTab.close();
+          await navigator.share({ files: [file], title: `FriendlyFlights — ${lastSearch?.destCity}` });
+          return;
+        }
+      } catch (shareErr) {
+        // Fall through to the URL-based fallback below.
+        console.warn('[shareAsImage] navigator.share failed', shareErr);
       }
     }
 
-    // Fallback: download
+    // iOS doesn't honour the <a download> attribute — the only reliable way to
+    // let the user save a generated image is to render it in a tab and let
+    // them long-press → "Save to Photos". We use a data URL because blob URLs
+    // are cross-origin-restricted inside about:blank popups on Safari.
+    if (ios) {
+      const dataUrl = canvas.toDataURL('image/png');
+      const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${filename}</title>
+<style>html,body{margin:0;background:#0b1220;color:#fff;font:14px -apple-system,system-ui,sans-serif;text-align:center}
+.tip{padding:14px 16px;background:rgba(7,112,227,.18);border-bottom:1px solid rgba(255,255,255,.08)}
+img{display:block;max-width:100%;height:auto;margin:0 auto}</style></head>
+<body><div class="tip">${escHtml(t('ios_save_hint'))}</div><img src="${dataUrl}" alt="${escHtml(filename)}"/></body></html>`;
+      if (earlyTab && !earlyTab.closed) {
+        earlyTab.document.open();
+        earlyTab.document.write(html);
+        earlyTab.document.close();
+      } else {
+        // Popup was blocked — embed inline so the user can still save it.
+        renderInlineImagePreview(canvas.toDataURL('image/png'), filename);
+      }
+      showToast(t('saved_img_ok'));
+      return;
+    }
+
+    // Desktop / Android fallback: anchor download.
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
+    showToast(t('saved_img_ok'));
   } catch (err) {
     console.error('[shareAsImage]', err);
-    section?.classList.remove('capturing');
+    if (stylesHidden) section.classList.remove('capturing');
+    earlyTab && earlyTab.close();
+    showToast(t('save_img_failed'), true);
   } finally {
     if (btnSpan) btnSpan.textContent = t('save_img');
     if (btn) btn.disabled = false;
   }
+}
+
+// Show the captured image inline (in-page lightbox) when we couldn't open a
+// new tab (popup blocked on iOS, for example). Long-press on the image to
+// save it. Tap the backdrop to close.
+function renderInlineImagePreview(dataUrl, filename) {
+  const ov = document.createElement('div');
+  ov.className = 'img-preview-overlay';
+  ov.innerHTML = `
+    <div class="img-preview-card">
+      <div class="img-preview-tip">${escHtml(t('ios_save_hint'))}</div>
+      <img src="${dataUrl}" alt="${escHtml(filename)}" />
+      <button class="img-preview-close" type="button" aria-label="Close">✕</button>
+    </div>`;
+  document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('.img-preview-close').addEventListener('click', close);
 }
 
 // ──────────────────────────────────────────────

@@ -82,6 +82,14 @@ body { font-family: var(--font); background: var(--gray-50); color: var(--gray-8
 @media (max-width: 640px) {
   .my-trips-dropdown { right: 8px; max-width: calc(100vw - 16px); }
 }
+/* Dim backdrop while the dropdown is open — makes it feel like a real
+   menu instead of a floating panel hovering over the page. Click-outside
+   handler in app.js closes the dropdown when the backdrop is tapped. */
+.my-trips-backdrop {
+  position: fixed; inset: 0; background: rgba(15,23,42,.32);
+  z-index: 240; display: none; -webkit-tap-highlight-color: transparent;
+}
+.my-trips-backdrop.open { display: block; animation: slideIn .15s ease; }
 /* iOS / Safari: ensure the button receives taps and has a clear feedback */
 .btn-trips { -webkit-tap-highlight-color: rgba(7,112,227,.18); }
 
@@ -414,7 +422,13 @@ body { font-family: var(--font); background: var(--gray-50); color: var(--gray-8
 
 /* ===== DEEP LINKS SECTION ===== */
 .deep-links-section { margin-bottom: 32px; }
-.dl-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-400); margin-bottom: 12px; }
+.dl-details { background: rgba(255,255,255,.55); border: 1px dashed var(--gray-200); border-radius: var(--radius-sm); padding: 4px 12px; }
+.dl-details[open] { background: white; border-style: solid; padding: 12px 14px; }
+.dl-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-500); margin-bottom: 0; padding: 8px 0; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
+.dl-title::-webkit-details-marker { display: none; }
+.dl-title::before { content: '›'; font-size: 18px; line-height: 1; transition: transform .15s ease; color: var(--brand); }
+.dl-details[open] > .dl-title { margin-bottom: 12px; color: var(--gray-700); }
+.dl-details[open] > .dl-title::before { transform: rotate(90deg); }
 .dl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 .dl-card { background: white; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); padding: 14px 16px; }
 .dl-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -531,14 +545,23 @@ button, a, input, select, [role="button"] {
 @media (pointer: coarse) {
   .btn-search, .btn-share, .btn-add-traveler,
   .sort-btn, .tag-chip, .btn-edit-search, .lang-switcher,
-  .btn-ghost, .dest-plan-btn, .dest-info-btn, .flex-day {
+  .btn-ghost, .dest-plan-btn, .dest-info-btn, .flex-day,
+  .btn-trips, .btn-save-trip, .lang-pill,
+  .view-tab, .aft-tab, .fp-choose-cta, .fp-book, .fp-chosen-badge,
+  .aft-show-more, .my-trips-entry, .my-trips-delete, .my-trips-clear,
+  .combo-book {
     min-height: 44px;
   }
-  .btn-remove { min-height: 40px; }
-  .pax-btn    { min-height: 40px; min-width: 40px; }
+  .btn-remove        { min-height: 40px; }
+  .pax-btn           { min-height: 40px; min-width: 40px; }
   /* Prevent iOS auto-zoom: inputs must be ≥ 16 px */
   input, select, textarea { font-size: 16px !important; }
 }
+
+/* Scroll-margin so when JS calls scrollIntoView() the sticky navbar
+   doesn't cover the target section. */
+.sort-bar, .view-tabs, .all-flights-section, .itinerary-section,
+.share-bar, .results-header { scroll-margin-top: 72px; }
 
 /* ===== RESPONSIVE — Tablet ===== */
 @media (max-width: 860px) {
@@ -1225,9 +1248,24 @@ label.flex-toggle { display: flex; align-items: center; gap: 5px; flex-shrink: 0
 
 /* No-flight fallback */
 .itin-no-flight {
-  display: flex; align-items: center; gap: 10px; padding: 10px 0;
-  font-size: 13px; color: var(--gray-400);
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  font-size: 13px; color: var(--gray-500);
+  background: linear-gradient(135deg, rgba(7,112,227,.05), rgba(124,58,237,.05));
+  border: 1px dashed var(--gray-200);
+  border-radius: 10px;
+  margin-top: 8px;
 }
+.itin-no-flight-icon {
+  font-size: 20px;
+  width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: white; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  flex-shrink: 0;
+  transform: rotate(-12deg);
+}
+.itin-no-flight-text { flex: 1; }
+.itin-no-flight-cta { color: var(--blue); font-weight: 600; text-decoration: none; white-space: nowrap; }
 .itin-no-flight a { color: var(--blue); font-weight: 600; text-decoration: none; }
 
 /* Flex grid */

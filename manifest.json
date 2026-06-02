@@ -1,0 +1,21 @@
+{
+  "name": "FriendlyFlights — Group flights made easy",
+  "short_name": "FriendlyFlights",
+  "description": "Find the best flight combination for a group of friends flying from different cities.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0770e3",
+  "lang": "es",
+  "categories": ["travel", "lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}

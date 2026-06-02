@@ -82,6 +82,9 @@ var STRINGS = {
     view_tab_flights:      '✈️ Individual flights',
     view_tab_combos:       '🏆 Best group combos',
     view_tab_destinations: '🗺️ Other destinations',
+    view_tab_flights_short:      '✈️ Flights',
+    view_tab_combos_short:       '🏆 Combos',
+    view_tab_destinations_short: '🗺️ Other',
 
     // ── All-flights picker ────────────────────────────────────────
     all_flights_title: 'All available flights',
@@ -197,8 +200,8 @@ var STRINGS = {
     hiw_1_p: 'Enter each friend\'s name and their nearest airport.',
     hiw_2_h: 'Pick a destination',
     hiw_2_p: 'Choose any city as your meeting point.',
-    hiw_3_h: 'We search Skyscanner',
-    hiw_3_p: 'A real browser fetches flight prices for each traveler — no fake data.',
+    hiw_3_h: 'We read Google Flights',
+    hiw_3_p: 'Fresh prices for each traveler — no fake data, no inflated fees.',
     hiw_4_h: 'Best combo ranked',
     hiw_4_p: 'We score every combination by total price + max travel time, so the whole group wins.',
 
@@ -280,6 +283,9 @@ var STRINGS = {
     view_tab_flights:      '✈️ Vuelos individuales',
     view_tab_combos:       '🏆 Mejores combos',
     view_tab_destinations: '🗺️ Otros destinos',
+    view_tab_flights_short:      '✈️ Vuelos',
+    view_tab_combos_short:       '🏆 Combos',
+    view_tab_destinations_short: '🗺️ Otros',
 
     // ── All-flights picker ────────────────────────────────────────
     all_flights_title: 'Todos los vuelos disponibles',
@@ -395,8 +401,8 @@ var STRINGS = {
     hiw_1_p: 'Introduce el nombre de cada amigo y su aeropuerto más cercano.',
     hiw_2_h: 'Elige el destino',
     hiw_2_p: 'Escoge cualquier ciudad como punto de encuentro.',
-    hiw_3_h: 'Buscamos en Skyscanner',
-    hiw_3_p: 'Un navegador real obtiene precios reales para cada viajero — sin datos falsos.',
+    hiw_3_h: 'Leemos Google Flights',
+    hiw_3_p: 'Precios reales para cada viajero — sin datos falsos, sin comisiones infladas.',
     hiw_4_h: 'Mejor combo clasificado',
     hiw_4_p: 'Puntuamos cada combinación por precio total + tiempo de vuelo máximo, para que gane todo el grupo.',
 
@@ -404,6 +410,78 @@ var STRINGS = {
     footer_note: 'Precios en tiempo real de Google Flights · aerolíneas alternativas para rutas económicas',
   },
 };
+
+// Vibe + country labels in destinations.js are stored in English (one source
+// of truth). When the UI is in Spanish we look them up here. Anything not
+// found falls back to the original English text — safe default.
+var VIBE_ES = {
+  'Beach & Culture':'Playa y cultura','City & Culture':'Ciudad y cultura',
+  'Beach & Party':'Playa y fiesta','Party Island':'Isla fiestera',
+  'Culture & History':'Cultura e historia','Beach & Food':'Playa y gastronomía',
+  'Volcanic Island':'Isla volcánica','Island Vibes':'Isla relajada',
+  'Sun & Beach':'Sol y playa','Wind & Waves':'Viento y olas',
+  'Culture & Vibes':'Cultura y ambiente','Wine & Culture':'Vino y cultura',
+  'Beach & Golf':'Playa y golf','Fashion & Culture':'Moda y cultura',
+  'Romantic Escape':'Escapada romántica','Food & History':'Gastronomía e historia',
+  'Day Trip Classic':'Clásica de un día','Food Capital':'Capital gastronómica',
+  'Sicily & Etna':'Sicilia y el Etna','Art & Romance':'Arte y romance',
+  'Hidden Sicily':'Sicilia escondida','History & Life':'Historia y vida',
+  'Crete & History':'Creta e historia','Green Island':'Isla verde',
+  'Sun & History':'Sol e historia','Island Party':'Fiesta isleña',
+  'Most Romantic':'La más romántica','Greek Hidden Gem':'Joya griega escondida',
+  'Shipwreck Beach':'Playa del naufragio','Medieval Coast':'Costa medieval',
+  'Beach & History':'Playa e historia','Underrated Capital':'Capital infravalorada',
+  'East meets West':'Donde Oriente y Occidente se encuentran','Turkish Riviera':'Riviera turca',
+  'All-Inclusive Sun':'Sol y todo incluido','Exotic & Vibrant':'Exótica y vibrante',
+  'Gateway to Morocco':'Puerta a Marruecos','Strait Crossroads':'Cruce del Estrecho',
+  'City of Love':'Ciudad del amor','French Riviera':'Riviera francesa',
+  'Raw & Authentic':'Cruda y auténtica','Wine Capital':'Capital del vino',
+  'Gastronomy Capital':'Capital gastronómica','Canals & Culture':'Canales y cultura',
+  'Beer & Waffles':'Cerveza y gofres','Arts & Nightlife':'Arte y vida nocturna',
+  'Beer & Alps':'Cerveza y Alpes','Port City':'Ciudad portuaria',
+  'Cathedral City':'Ciudad catedralicia','Alps & Luxury':'Alpes y lujo',
+  'Lake & Mountains':'Lago y montañas','Classical Europe':'Europa clásica',
+  'Mozart & Music':'Mozart y música','Medieval Party':'Fiesta medieval',
+  'Pearl of Danube':'Perla del Danubio','Rising Capital':'Capital emergente',
+  'Medieval Gem':'Joya medieval','Baltic Hanseatic':'Hanseática del Báltico',
+  'Hygge & Design':'Hygge y diseño','Scandinavian Cool':'Estilo escandinavo',
+  'Fjords & Nature':'Fiordos y naturaleza','Nordic Tranquil':'Tranquilidad nórdica',
+  'Otherworldly Nature':'Naturaleza de otro mundo','Baltic Beauty':'Belleza báltica',
+  'Medieval Fairy Tale':'Cuento medieval','Balkan Nightlife':'Noche balcánica',
+  'Hidden Gem':'Joya escondida','Party & Culture':'Fiesta y cultura',
+  'Baroque Gem':'Joya barroca','Pub & Craic':'Pubs y craic',
+  'Castles & Highlands':'Castillos y tierras altas','World Capital':'Capital del mundo',
+  'Ultra-Modern Luxury':'Lujo ultramoderno','The Big Apple':'La Gran Manzana',
+  'Sun & Nightlife':'Sol y vida nocturna','Megacity Energy':'Energía de megaciudad',
+  'Tango & Steak':'Tango y bife','Future & Tradition':'Futuro y tradición',
+  'Clean & Cosmopolitan':'Limpia y cosmopolita','Vibrant & Cheap':'Vibrante y económica',
+  'East-meets-West':'Oriente y Occidente','K-Pop & Cuisine':'K-Pop y gastronomía',
+  'Tropical Beach Party':'Fiesta tropical en la playa','Island Paradise':'Paraíso isleño',
+  'Skyline & Street Food':'Rascacielos y comida callejera','Modern Arabia':'Arabia moderna',
+  'Capital of Luxury':'Capital del lujo','Skyline of Europe':'Skyline europeo',
+  'Hollywood & Beaches':'Hollywood y playas','Bay City Vibes':'Ambiente de bahía',
+  'Theme-Park Capital':'Capital de parques temáticos','Neon Nightlife':'Noches de neón',
+  'Hawaiian Paradise':'Paraíso hawaiano','Caribbean Resort':'Resort caribeño',
+  'Aztec Megacity':'Megaciudad azteca','Multicultural Metro':'Metrópoli multicultural',
+  'Mountains & Sea':'Montañas y mar','Beach & Carnival':'Playa y carnaval',
+  'Foodie Capital':'Capital foodie','Pyramids & Pharaohs':'Pirámides y faraones',
+};
+var COUNTRY_ES = {
+  'Spain':'España','Portugal':'Portugal','Italy':'Italia','Greece':'Grecia',
+  'Croatia':'Croacia','Turkey':'Turquía','Morocco':'Marruecos','France':'Francia',
+  'Netherlands':'Países Bajos','Belgium':'Bélgica','Germany':'Alemania',
+  'Switzerland':'Suiza','Austria':'Austria','Czech Rep.':'Rep. Checa',
+  'Hungary':'Hungría','Poland':'Polonia','Denmark':'Dinamarca','Sweden':'Suecia',
+  'Norway':'Noruega','Finland':'Finlandia','Iceland':'Islandia','Latvia':'Letonia',
+  'Estonia':'Estonia','Serbia':'Serbia','Bulgaria':'Bulgaria','Romania':'Rumanía',
+  'Lithuania':'Lituania','Ireland':'Irlanda','UK':'Reino Unido','UAE':'EAU',
+  'USA':'EE. UU.','Brazil':'Brasil','Argentina':'Argentina','Japan':'Japón',
+  'Singapore':'Singapur','Thailand':'Tailandia','Hong Kong':'Hong Kong',
+  'South Korea':'Corea del Sur','Indonesia':'Indonesia','Malaysia':'Malasia',
+  'Qatar':'Catar','Mexico':'México','Canada':'Canadá','Peru':'Perú','Egypt':'Egipto',
+};
+function localizeVibe(s)    { return currentLang === 'es' ? (VIBE_ES[s]    || s) : s; }
+function localizeCountry(s) { return currentLang === 'es' ? (COUNTRY_ES[s] || s) : s; }
 
 // ─── Public API ─────────────────────────────────────────────────
 function t(key) {

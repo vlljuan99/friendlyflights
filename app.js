@@ -208,8 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
     tripsToggleDropdown();
   });
+  document.getElementById('myTripsBackdrop')?.addEventListener('click', tripsCloseDropdown);
   document.addEventListener('click', e => {
-    if (!e.target.closest('.my-trips-wrap')) tripsCloseDropdown();
+    if (!e.target.closest('.my-trips-wrap') && !e.target.closest('#myTripsDropdown')) {
+      tripsCloseDropdown();
+    }
   });
   document.getElementById('saveTripBtn')?.addEventListener('click', tripsSaveCurrent);
   tripsRefreshButton();
@@ -835,14 +838,17 @@ function tripsRenderDropdown() {
 
 function tripsToggleDropdown() {
   const dropdown = document.getElementById('myTripsDropdown');
+  const backdrop = document.getElementById('myTripsBackdrop');
   const btn = document.getElementById('myTripsBtn');
   const open = !dropdown.classList.contains('open');
   if (open) tripsRenderDropdown();
   dropdown.classList.toggle('open', open);
+  backdrop?.classList.toggle('open', open);
   btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 function tripsCloseDropdown() {
   document.getElementById('myTripsDropdown')?.classList.remove('open');
+  document.getElementById('myTripsBackdrop')?.classList.remove('open');
   document.getElementById('myTripsBtn')?.setAttribute('aria-expanded', 'false');
 }
 
@@ -983,10 +989,12 @@ function renderResultsSection() {
 function renderViewTabs() {
   const bar = document.getElementById('viewTabs');
   if (!bar) return;
+  // On narrow screens use the short labels so they don't truncate with "…".
+  const narrow = window.innerWidth <= 640;
   const tabs = [
-    { id: 'flights',      label: t('view_tab_flights') },
-    { id: 'combos',       label: t('view_tab_combos') },
-    { id: 'destinations', label: t('view_tab_destinations') },
+    { id: 'flights',      label: t(narrow ? 'view_tab_flights_short'      : 'view_tab_flights') },
+    { id: 'combos',       label: t(narrow ? 'view_tab_combos_short'       : 'view_tab_combos') },
+    { id: 'destinations', label: t(narrow ? 'view_tab_destinations_short' : 'view_tab_destinations') },
   ];
   bar.innerHTML = tabs.map(tab => `
     <button class="view-tab${tab.id === activeResultsView ? ' active' : ''}"
@@ -1007,8 +1015,13 @@ function setResultsView(view) {
   if (flightsView)      flightsView.style.display      = view === 'flights'      ? '' : 'none';
   if (combosView)       combosView.style.display       = view === 'combos'       ? '' : 'none';
   // The planner is a sibling section of resultsSection, but acts as the
-  // "destinations" tab's content when results are visible.
-  if (destinationsView) destinationsView.style.display = view === 'destinations' ? '' : 'none';
+  // "destinations" tab's content when results are visible. Re-render it
+  // when entering this view so it reflects the current travelers' origins
+  // (otherwise it can still show the empty-origins hint from page load).
+  if (destinationsView) {
+    destinationsView.style.display = view === 'destinations' ? '' : 'none';
+    if (view === 'destinations') renderPlanner();
+  }
 
   document.querySelectorAll('#viewTabs .view-tab').forEach(btn => {
     const isActive = btn.dataset.view === view;
@@ -1277,8 +1290,9 @@ function renderItinSegment(flight, tvl, origin, dest, date, isRet) {
       <div class="itin-segment">
         <div class="itin-seg-label">${dirBadge}<span class="itin-seg-date">${dateLabel}</span></div>
         <div class="itin-no-flight">
-          <span>${t('itin_noresult')}</span>
-          <a href="${escHtml(fallback)}" target="_blank" rel="noopener">${t('itin_search')} →</a>
+          <span class="itin-no-flight-icon">✈</span>
+          <span class="itin-no-flight-text">${t('itin_noresult')}</span>
+          <a class="itin-no-flight-cta" href="${escHtml(fallback)}" target="_blank" rel="noopener">${t('itin_search')} →</a>
         </div>
       </div>`;
   }
@@ -1570,28 +1584,32 @@ function selectCombo(sc) {
 // ── Deep links per traveler ───────────────────
 function renderDeepLinksSection() {
   const section = document.getElementById('deepLinksSection');
+  // Collapsed by default — these are escape-hatch links for power users; the
+  // 90 % use case is the in-app picker/combos. Tap the title to expand.
   section.innerHTML = `
-    <div class="dl-title">${t('dl_title')}</div>
-    <div class="dl-grid">
-      ${travelers.map(t => {
-        const links = buildLinks(t.airportCode, lastSearch.destCode, lastSearch.depDate, lastSearch.retDate);
-        return `
-          <div class="dl-card">
-            <div class="dl-header">
-              <div class="dl-avatar ${t.colorClass}">${getInitials(t.name)}</div>
-              <div>
-                <div class="dl-name">${escHtml(t.name)}</div>
-                <div class="dl-route">${t.airportCode} → ${lastSearch.destCode}</div>
+    <details class="dl-details">
+      <summary class="dl-title">${t('dl_title')}</summary>
+      <div class="dl-grid">
+        ${travelers.map(t => {
+          const links = buildLinks(t.airportCode, lastSearch.destCode, lastSearch.depDate, lastSearch.retDate);
+          return `
+            <div class="dl-card">
+              <div class="dl-header">
+                <div class="dl-avatar ${t.colorClass}">${getInitials(t.name)}</div>
+                <div>
+                  <div class="dl-name">${escHtml(t.name)}</div>
+                  <div class="dl-route">${t.airportCode} → ${lastSearch.destCode}</div>
+                </div>
               </div>
-            </div>
-            <div class="dl-links">
-              <a href="${links.skyscanner}" class="search-link link-skyscanner" target="_blank" rel="noopener">Skyscanner</a>
-              <a href="${links.google}"     class="search-link link-google"     target="_blank" rel="noopener">Google Flights</a>
-              <a href="${links.kayak}"      class="search-link link-kayak"      target="_blank" rel="noopener">Kayak</a>
-            </div>
-          </div>`;
-      }).join('')}
-    </div>`;
+              <div class="dl-links">
+                <a href="${links.skyscanner}" class="search-link link-skyscanner" target="_blank" rel="noopener">Skyscanner</a>
+                <a href="${links.google}"     class="search-link link-google"     target="_blank" rel="noopener">Google Flights</a>
+                <a href="${links.kayak}"      class="search-link link-kayak"      target="_blank" rel="noopener">Kayak</a>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </details>`;
 }
 
 // ──────────────────────────────────────────────
@@ -1730,10 +1748,10 @@ function renderPlanner() {
                       <span class="dest-emoji">${d.emoji}</span>
                       <div class="dest-info">
                         <div class="dest-city">${d.flag} ${d.city}</div>
-                        <div class="dest-country">${d.country}</div>
+                        <div class="dest-country">${escHtml(localizeCountry(d.country))}</div>
                       </div>
                     </div>
-                    <div class="dest-vibe">${d.vibe}</div>
+                    <div class="dest-vibe">${escHtml(localizeVibe(d.vibe))}</div>
                     <div class="dest-tags">${tagHtml}</div>
                     <div class="dest-footer">
                       <button class="dest-info-btn" data-code="${d.code}">ℹ️ Info</button>
@@ -1941,10 +1959,14 @@ function copyLinks() {
     const btn = document.getElementById('copyBtn');
     btn.querySelector('span').textContent = t('share_copied');
     btn.classList.add('copied');
+    showToast(t('share_copied'));   // also surface a global toast
     setTimeout(() => {
       btn.querySelector('span').textContent = t('share_copy');
       btn.classList.remove('copied');
     }, 2500);
+  }).catch(err => {
+    showToast(t('error_search_failed'), true);
+    console.warn('[copyLinks]', err);
   });
 }
 
@@ -2013,7 +2035,13 @@ function formatDur(min) {
 function formatDateMedium(d) {
   if (!d) return '';
   const locale = (typeof currentLang !== 'undefined' && currentLang === 'es') ? 'es-ES' : 'en-GB';
-  return new Date(d + 'T12:00:00').toLocaleDateString(locale, { weekday:'short', day:'numeric', month:'short' });
+  const date = new Date(d + 'T12:00:00');
+  const opts = { weekday: 'short', day: 'numeric', month: 'short' };
+  // Include the year when the date isn't in the current calendar year, so
+  // saved-for-later trips don't read ambiguously ("16 jul" could be 2026
+  // or 2027).
+  if (date.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+  return date.toLocaleDateString(locale, opts);
 }
 function formatDateShort(d) {
   if (!d) return '';
@@ -2076,8 +2104,8 @@ async function openDestinationInfo(code) {
 
   // Static info
   document.getElementById('destModalTitle').textContent = dest.flag + ' ' + dest.city;
-  document.getElementById('destModalSub').textContent   = dest.country + ' · ' + t(dest.region);
-  document.getElementById('destModalVibe').textContent  = dest.vibe;
+  document.getElementById('destModalSub').textContent   = localizeCountry(dest.country) + ' · ' + t(dest.region);
+  document.getElementById('destModalVibe').textContent  = localizeVibe(dest.vibe);
 
   // Description — loading pulse while fetching
   document.getElementById('destModalDesc').innerHTML = '<span class="dest-modal-loading">···</span>';

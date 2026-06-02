@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0770e3" />
   <title>FriendlyFlights — Group flights made easy</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -28,8 +31,9 @@
           <span class="my-trips-text" data-i18n="my_trips_label">My trips</span>
           <span class="my-trips-count" id="myTripsCount"></span>
         </button>
-        <div class="my-trips-dropdown" id="myTripsDropdown" role="menu"></div>
       </div>
+      <div class="my-trips-backdrop" id="myTripsBackdrop"></div>
+      <div class="my-trips-dropdown" id="myTripsDropdown" role="menu"></div>
       <div class="lang-switcher" id="langSwitcher" role="tablist" aria-label="Language">
         <button class="lang-pill" data-lang="es" type="button">🇪🇸 ES</button>
         <button class="lang-pill" data-lang="en" type="button">🇬🇧 EN</button>
@@ -194,9 +198,9 @@
 <div class="loading-overlay" id="loadingOverlay" style="display:none">
   <div class="loading-card">
     <div class="spinner"></div>
-    <p class="loading-text" id="loadingText">Searching…</p>
+    <p class="loading-text" id="loadingText" data-i18n="loading_text">Searching…</p>
     <div class="loading-travelers" id="loadingTravelers"></div>
-    <p class="loading-note" data-i18n="loading_note">Using Skyscanner (with Ryanair fallback) — this may take ~30 s per route</p>
+    <p class="loading-note" data-i18n="loading_note">Fetching live prices from Google Flights — this may take ~20 s per route</p>
   </div>
 </div>
 

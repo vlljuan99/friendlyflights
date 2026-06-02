@@ -1,0 +1,29 @@
+name: Deploy to Fly.io
+
+# Triggers:
+#   - every push to main → deploy production
+#   - manual run from the Actions tab
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Avoid stacking deploys when several commits land back-to-back.
+concurrency:
+  group: deploy-fly
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: flyctl deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # --remote-only builds the Docker image on Fly's builder (we keep the
+      # GitHub Action runner cheap — it just sends the source tarball).
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

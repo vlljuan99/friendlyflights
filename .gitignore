@@ -1,0 +1,22 @@
+node_modules
+.env
+.env.*
+!.env.example
+.claude
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs / OS junk
+*.log
+.DS_Store
+Thumbs.db
+
+# Fly.io local state — secrets aren't here, but cache is
+.fly/
+
+# Build artefacts (we don't have any, but harmless to declare)
+dist/
+build/

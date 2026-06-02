@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0770e3" />
+  <title>FriendlyFlights — Group flights made easy</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="logo" id="navLogo" role="button" tabindex="0" title="Home">
+      <span class="logo-icon">✈</span>
+      <span class="logo-text">FriendlyFlights</span>
+    </div>
+    <div class="nav-links">
+      <a href="#howSection" data-i18n="nav_how">How it works</a>
+      <a href="#" class="btn-ghost" data-i18n="nav_signin">Sign in</a>
+      <button class="lang-switcher" id="langSwitcher" data-i18n="lang_switch">🇪🇸 ES</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1 data-i18n-html="hero_h1">Fly together from <em>anywhere</em></h1>
+    <p class="hero-sub" data-i18n="hero_sub">Everyone searches from their own city. We find the best flight combination for the whole group — automatically.</p>
+  </div>
+</header>
+
+<section class="search-panel-section">
+  <div class="search-panel" id="searchPanel">
+    <div class="panel-header">
+      <h2 data-i18n="panel_h2">Where is everyone flying from?</h2>
+      <p class="panel-sub" data-i18n="panel_sub">Add each traveler and their departure city</p>
+    </div>
+
+    <div class="travelers-list" id="travelersList"></div>
+
+    <button class="btn-add-traveler" id="addTravelerBtn">
+      <span class="plus">+</span> <span data-i18n="add_traveler">Add another traveler</span>
+    </button>
+
+    <div class="destination-row">
+      <div class="field-group">
+        <label data-i18n="flying_to">Flying to</label>
+        <div class="airport-input-wrap">
+          <span class="field-icon">📍</span>
+          <input type="text" id="destinationInput" placeholder="Destination city or airport"
+            autocomplete="off" data-i18n-ph="dest_placeholder" />
+          <div class="airport-dropdown" id="destDropdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="planner-cta-banner" id="plannerCtaBanner" type="button" style="display:none">
+      <span class="planner-cta-icon">🗺️</span>
+      <span class="planner-cta-body">
+        <span class="planner-cta-text" data-i18n="planner_cta">Not sure where to go? Discover destinations below</span>
+        <span class="planner-cta-hint" data-i18n="planner_cta_hint">See where everyone in your group can meet</span>
+      </span>
+      <span class="planner-cta-arrow">↓</span>
+    </button>
+
+    <div class="dates-row">
+      <div class="field-group">
+        <label class="date-label-row">
+          <span data-i18n="dep_date">Departure date</span>
+          <select class="flex-select" id="flexDep" aria-label="Flexible departure days"></select>
+        </label>
+        <div class="date-input-wrap">
+          <span class="field-icon">📅</span>
+          <input type="date" id="departureDate" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="date-label-row">
+          <span><span data-i18n="ret_date">Return date</span> <span class="optional" data-i18n="optional">(optional)</span></span>
+          <select class="flex-select" id="flexRet" aria-label="Flexible return days"></select>
+        </label>
+        <div class="date-input-wrap">
+          <span class="field-icon">📅</span>
+          <input type="date" id="returnDate" />
+        </div>
+      </div>
+    </div>
+
+    <div class="search-actions">
+      <button class="btn-search" id="searchBtn">
+        <span class="search-icon">🔍</span>
+        <span data-i18n="search_btn">Search flights for everyone</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="results-section" id="resultsSection" style="display:none">
+  <div class="results-inner">
+
+    <!-- Header -->
+    <div class="results-header">
+      <div class="results-title-block">
+        <h2 id="resultsTitle"></h2>
+        <p id="resultsSubtitle" class="results-sub"></p>
+      </div>
+      <button class="btn-edit-search" id="editSearchBtn" data-i18n="edit_search">✏️ Edit search</button>
+    </div>
+
+    <!-- Share — at the top so it's always one click away -->
+    <div class="share-bar" id="shareBar">
+      <div class="share-bar-left">
+        <span class="share-bar-icon">💬</span>
+        <span class="share-bar-text" data-i18n="share_h3">Share with the group</span>
+      </div>
+      <div class="share-bar-buttons">
+        <button class="btn-share btn-whatsapp" id="whatsappBtn" data-i18n="share_wa">WhatsApp</button>
+        <button class="btn-share btn-copy"     id="copyBtn"><span data-i18n="share_copy">Copy links</span></button>
+        <button class="btn-share btn-img"      id="imgBtn"><span data-i18n="save_img">📸 Save as image</span></button>
+      </div>
+    </div>
+
+    <!-- Per-traveler itinerary (the chosen flights) -->
+    <div class="itinerary-section" id="itinerarySection"></div>
+
+    <!-- View selector — pick which section to view -->
+    <div class="view-tabs" id="viewTabs" role="tablist"></div>
+
+    <!-- View: individual flights per traveler -->
+    <div class="results-view results-view-flights" id="resultsViewFlights">
+      <div class="all-flights-section" id="allFlightsSection"></div>
+      <div class="deep-links-section"  id="deepLinksSection"></div>
+    </div>
+
+    <!-- View: best group combinations -->
+    <div class="results-view results-view-combos" id="resultsViewCombos">
+      <div class="sort-bar"   id="sortBar"></div>
+      <div class="combo-grid" id="comboGrid"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- DESTINATION INFO MODAL -->
+<div class="dest-modal-overlay" id="destModal" style="display:none" role="dialog" aria-modal="true">
+  <div class="dest-modal">
+    <button class="dest-modal-close" id="destModalClose" aria-label="Close">✕</button>
+    <div class="dest-modal-img-wrap" id="destModalImgWrap">
+      <img class="dest-modal-img" id="destModalImg" src="" alt="" style="display:none" />
+      <div class="dest-modal-emoji-bg" id="destModalEmojiPlaceholder">
+        <span class="dest-modal-big-emoji" id="destModalEmoji"></span>
+      </div>
+    </div>
+    <div class="dest-modal-body">
+      <div class="dest-modal-top">
+        <div>
+          <h2 class="dest-modal-title" id="destModalTitle"></h2>
+          <p class="dest-modal-sub" id="destModalSub"></p>
+        </div>
+        <span class="dest-modal-vibe" id="destModalVibe"></span>
+      </div>
+      <p class="dest-modal-desc" id="destModalDesc"><span class="dest-modal-loading">···</span></p>
+      <div class="dest-modal-tags" id="destModalTags"></div>
+      <div class="dest-modal-actions">
+        <a class="dest-modal-wiki" id="destModalWiki" href="#" target="_blank" rel="noopener" style="display:none">Wikipedia →</a>
+        <button class="dest-plan-btn dest-modal-plan" id="destModalPlan">Plan trip →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="loading-card">
+    <div class="spinner"></div>
+    <p class="loading-text" id="loadingText">Searching…</p>
+    <div class="loading-travelers" id="loadingTravelers"></div>
+    <p class="loading-note" data-i18n="loading_note">Using Skyscanner (with Ryanair fallback) — this may take ~30 s per route</p>
+  </div>
+</div>
+
+<!-- DESTINATION PLANNER -->
+<section class="planner-section" id="plannerSection"></section>
+
+<section class="how-section" id="howSection">
+  <div class="how-inner">
+    <h2 data-i18n="hiw_title">How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">👥</div>
+        <h3 data-i18n="hiw_1_h">Add your crew</h3>
+        <p data-i18n="hiw_1_p">Enter each friend's name and their nearest airport.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">🗺️</div>
+        <h3 data-i18n="hiw_2_h">Pick a destination</h3>
+        <p data-i18n="hiw_2_p">Choose any city as your meeting point.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">🔍</div>
+        <h3 data-i18n="hiw_3_h">We search Skyscanner</h3>
+        <p data-i18n="hiw_3_p">A real browser fetches flight prices for each traveler — no fake data.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">🏆</div>
+        <h3 data-i18n="hiw_4_h">Best combo ranked</h3>
+        <p data-i18n="hiw_4_p">We score every combination by total price + max travel time, so the whole group wins.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo" id="footerLogo" role="button" tabindex="0" title="Home">
+      <span class="logo-icon">✈</span>
+      <span class="logo-text">FriendlyFlights</span>
+    </div>
+    <p class="footer-note" data-i18n="footer_note">Prices fetched live from Google Flights · airline fallbacks for budget routes</p>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+<script src="i18n.js"></script>
+<script src="destinations.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1335,6 +1335,9 @@ label.flex-toggle { display: flex; align-items: center; gap: 5px; flex-shrink: 0
 
   .aft-title           { font-size: 17px; }
   .aft-direction-block { padding: 12px 14px; }
+  /* Stack IDA + VUELTA in a single column on phones — otherwise the
+     2-up grid crushes the cards and the price + airline get clipped. */
+  .aft-direction-grid.has-return { grid-template-columns: 1fr; }
   .aft-tabs {
     flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
     padding-bottom: 4px; margin: 0 -4px 14px; padding-left: 4px; padding-right: 4px;

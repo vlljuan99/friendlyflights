@@ -530,40 +530,53 @@ async function fetchRoute(origin, dest, date, rowId) {
   }
 }
 
-// ── Fetch ±2-day prices in background ─────────
+// ── Fetch flex prices in background, with a concurrency cap ───────
+// Each fetchRoute() triggers the server to spawn a Python fli process
+// (~50–100 MB). With ±5 days × N travelers × 2 directions we can easily
+// queue 60 simultaneous spawns and OOM a 1 GB Fly VM — so we cap to
+// FLEX_CONCURRENCY workers pulling from a shared task list. Cells fill in
+// progressively as their batch finishes.
+const FLEX_CONCURRENCY = 3;
 async function fetchFlexPrices() {
   const { destCode, depDate, retDate, flexDep, flexRet } = lastSearch;
 
-  const promises = [];
-
+  // Build the full task list once, then process N at a time.
+  const tasks = [];
   travelers.forEach(tvl => {
     if (flexDep) {
       flexOffsets(flexDep).forEach(off => {
-        const d = addDaysISO(depDate, off);
-        promises.push(
-          fetchRoute(tvl.airportCode, destCode, d, null)
-            .then(flights => {
-              tvl.flexOut[d] = flights[0] ?? null;
-              refreshFlexGrid(tvl.id, false);
-            })
-        );
+        tasks.push({ tvl, isRet: false, date: addDaysISO(depDate, off) });
       });
     }
     if (flexRet && retDate) {
       flexOffsets(flexRet).forEach(off => {
-        const d = addDaysISO(retDate, off);
-        promises.push(
-          fetchRoute(destCode, tvl.airportCode, d, null)
-            .then(flights => {
-              tvl.flexRet[d] = flights[0] ?? null;
-              refreshFlexGrid(tvl.id, true);
-            })
-        );
+        tasks.push({ tvl, isRet: true, date: addDaysISO(retDate, off) });
       });
     }
   });
+  if (!tasks.length) return;
 
-  await Promise.all(promises);
+  let cursor = 0;
+  async function worker() {
+    while (true) {
+      const i = cursor++;
+      if (i >= tasks.length) return;
+      const { tvl, isRet, date } = tasks[i];
+      try {
+        const flights = isRet
+          ? await fetchRoute(destCode, tvl.airportCode, date, null)
+          : await fetchRoute(tvl.airportCode, destCode, date, null);
+        if (isRet) { tvl.flexRet[date] = flights[0] ?? null; }
+        else       { tvl.flexOut[date] = flights[0] ?? null; }
+        refreshFlexGrid(tvl.id, isRet);
+      } catch { /* swallow — leave the cell as null/loading */ }
+    }
+  }
+  const workers = Array.from(
+    { length: Math.min(FLEX_CONCURRENCY, tasks.length) },
+    () => worker()
+  );
+  await Promise.all(workers);
 }
 
 function editSearch() {

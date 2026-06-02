@@ -36,7 +36,13 @@ body { font-family: var(--font); background: var(--gray-50); color: var(--gray-8
 .nav-links { display: flex; align-items: center; gap: 24px; }
 .nav-links a { text-decoration: none; color: var(--gray-600); font-size: 14px; font-weight: 500; transition: color .15s; }
 .nav-links a:hover { color: var(--blue); }
-.btn-ghost { border: 1.5px solid var(--blue); color: var(--blue) !important; padding: 6px 16px; border-radius: 20px; transition: background .15s !important; }
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 34px; box-sizing: border-box;   /* match the lang-switcher pill height */
+  border: 1.5px solid var(--blue); color: var(--blue) !important;
+  padding: 4px 16px; border-radius: 20px;
+  transition: background .15s !important;
+}
 .btn-ghost:hover { background: var(--blue-light) !important; }
 /* Language switcher — two side-by-side pills with the active language
    filled in blue. Both languages are always visible so users can switch
@@ -502,7 +508,7 @@ button, a, input, select, [role="button"] {
     width: 32px; height: 32px;
     min-height: unset;
   }
-  .pax-stepper { align-self: flex-start; }
+  .pax-stepper { align-self: center; }
 
   /* ----- ADD TRAVELER BUTTON ----- */
   .btn-add-traveler { width: 100%; justify-content: center; margin-bottom: 20px; padding: 12px 20px; }

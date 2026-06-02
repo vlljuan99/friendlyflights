@@ -38,8 +38,17 @@ body { font-family: var(--font); background: var(--gray-50); color: var(--gray-8
 .nav-links a:hover { color: var(--blue); }
 .btn-ghost { border: 1.5px solid var(--blue); color: var(--blue) !important; padding: 6px 16px; border-radius: 20px; transition: background .15s !important; }
 .btn-ghost:hover { background: var(--blue-light) !important; }
-.lang-switcher { background: var(--gray-100); border: 1.5px solid var(--gray-200); color: var(--gray-600); font-size: 13px; font-weight: 600; font-family: var(--font); padding: 5px 13px; border-radius: 20px; cursor: pointer; transition: all .15s; line-height: 1.4; }
-.lang-switcher:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+/* Language switcher — two side-by-side pills with the active language
+   filled in blue. Both languages are always visible so users can switch
+   with a single tap. */
+.lang-switcher { display: inline-flex; padding: 3px; gap: 2px;
+  background: var(--gray-100); border: 1.5px solid var(--gray-200);
+  border-radius: 20px; font-family: var(--font); line-height: 1.4; }
+.lang-pill { background: transparent; border: none; color: var(--gray-600);
+  font-size: 13px; font-weight: 700; padding: 4px 11px; border-radius: 16px;
+  cursor: pointer; transition: background .15s, color .15s; font-family: inherit; }
+.lang-pill:hover { color: var(--blue); }
+.lang-pill.active { background: white; color: var(--blue); box-shadow: 0 1px 4px rgba(15,23,42,.10); }
 
 /* ===== HERO ===== */
 .hero { position: relative; background: linear-gradient(135deg, #0770e3 0%, #044fa0 50%, #022d6e 100%); color: white; padding: 80px 24px 140px; text-align: center; overflow: hidden; }
@@ -468,6 +477,11 @@ button, a, input, select, [role="button"] {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    /* Override the desktop grid's align-items:center — in flex-column that
+       prevents children from stretching to fill the card's content width,
+       which makes the name + airport inputs visibly shrink and indent.
+       Stretch keeps every row edge-to-edge inside the card. */
+    align-items: stretch;
     margin-bottom: 14px;
     background: var(--gray-50);
     border: 1.5px solid var(--gray-200);
@@ -476,8 +490,10 @@ button, a, input, select, [role="button"] {
     position: relative;
     animation: slideIn .2s ease;
   }
-  .traveler-name-group { display: flex; padding-right: 36px; /* room for × btn */ }
-  .traveler-avatar     { width: 30px; height: 30px; font-size: 11px; }
+  .traveler-name-group { display: flex; gap: 8px; padding-right: 36px; /* room for × btn */ }
+  .traveler-name-group .traveler-name-input { flex: 1 1 0; min-width: 0; }
+  .airport-input-wrap, .airport-input-wrap input { width: 100%; box-sizing: border-box; }
+  .traveler-avatar     { width: 30px; height: 30px; font-size: 11px; flex-shrink: 0; }
   .traveler-name-input { font-size: 15px; padding: 8px 12px; }
   .airport-input-wrap input { font-size: 15px; padding: 10px 12px 10px 36px; }
   .btn-remove {
@@ -1282,6 +1298,18 @@ label.flex-toggle { display: flex; align-items: center; gap: 5px; flex-shrink: 0
 }
 .aft-flights   { display: flex; flex-direction: column; gap: 8px; }
 .aft-empty     { padding: 16px; text-align: center; color: var(--gray-400); font-size: 13px; }
+
+/* "Mostrar más" / "Show more" expander at the bottom of a direction column */
+.aft-show-more {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 10px; padding: 10px 14px;
+  background: white; color: var(--blue);
+  border: 1.5px dashed var(--blue); border-radius: var(--radius-sm);
+  font: 700 13px/1.2 var(--font); cursor: pointer;
+  transition: background .15s, border-style .15s;
+}
+.aft-show-more:hover  { background: var(--blue-light); border-style: solid; }
+.aft-show-more-count  { background: var(--blue); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
 
 .flight-pick-card {
   display: grid;

@@ -77,6 +77,7 @@ var STRINGS = {
     all_flights_hint:  'Click any flight to set it as the chosen one above',
     flight_selected:   '✓ Chosen',
     flight_select:     'Choose',
+    show_more:         function (n) { return 'Show ' + n + ' more'; },
 
     // ── Sort bar ──────────────────────────────────────────────────
     sort_by:    'Sort by:',
@@ -263,6 +264,7 @@ var STRINGS = {
     all_flights_hint:  'Pulsa cualquier vuelo para fijarlo como el elegido arriba',
     flight_selected:   '✓ Elegido',
     flight_select:     'Elegir',
+    show_more:         function (n) { return 'Ver ' + n + ' más'; },
 
     // ── Sort bar ──────────────────────────────────────────────────
     sort_by:    'Ordenar por:',

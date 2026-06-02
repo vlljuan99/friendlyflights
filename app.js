@@ -203,10 +203,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('copyBtn').addEventListener('click', copyLinks);
   document.getElementById('imgBtn')?.addEventListener('click', shareAsImage);
 
-  // Language switcher
-  document.getElementById('langSwitcher')?.addEventListener('click', () => {
-    setLang(currentLang === 'en' ? 'es' : 'en');
-    rerenderAll();
+  // Language switcher — two pills (ES / EN). Highlight the active one and
+  // wire each to a specific language so a single tap switches.
+  refreshLangSwitcherActive();
+  document.querySelectorAll('#langSwitcher .lang-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const lang = pill.dataset.lang;
+      if (lang === currentLang) return;
+      setLang(lang);
+      refreshLangSwitcherActive();
+      rerenderAll();
+    });
   });
 
   // Planner CTA banner — scroll to planner section on click
@@ -471,6 +478,7 @@ async function runSearch() {
   directOnly        = false;   // always start fresh — user can re-toggle from results
   activeTravelerId  = null;    // reset tab → first traveler shows in the picker
   activeResultsView = 'flights'; // default landing view after a search
+  pickerVisible     = {};      // reset pagination — each column starts at page 1
 
   // Init flex price maps — undefined = loading, null = no result, object = flight
   travelers.forEach(t => { t.flexOut = {}; t.flexRet = {}; });
@@ -595,6 +603,13 @@ function editSearch() {
 function goHome() {
   closeDestinationModal();
   editSearch();
+}
+
+// Mark the right pill of the two-language switcher as active.
+function refreshLangSwitcherActive() {
+  document.querySelectorAll('#langSwitcher .lang-pill').forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.lang === currentLang);
+  });
 }
 
 // Offsets to fetch around a base date for ±N flexibility (excludes 0,
@@ -818,6 +833,10 @@ function renderItinerarySection() {
 
 // Which traveler's flights the picker currently shows.
 let activeTravelerId = null;
+// How many flights to show in each picker column. Pages of 5; the user
+// expands with a "Mostrar más" button. Keyed by "<travelerId>-out|ret".
+const PICKER_PAGE_SIZE = 5;
+let pickerVisible = {};
 
 // ── All-flights picker — tabs at the top (one per traveler) keep the page
 //    short regardless of group size. The selected tab shows that
@@ -840,9 +859,20 @@ function renderAllFlightsSection() {
   const hasReturn = !!retDate;
 
   const renderColumn = (label, icon, fromCode, toCode, list, isReturn) => {
-    const cards = (getFilteredFlights(list) || [])
+    const filtered = getFilteredFlights(list) || [];
+    const key      = `${active.id}-${isReturn ? 'ret' : 'out'}`;
+    const shown    = pickerVisible[key] || PICKER_PAGE_SIZE;
+    const slice    = filtered.slice(0, shown);
+    const remaining = Math.max(0, filtered.length - shown);
+    const cards = slice
       .map(f => renderFlightPickCard(active, f, f === list[0], isReturn))
       .join('');
+    const moreBtn = remaining > 0
+      ? `<button class="aft-show-more" data-key="${key}">
+           ${t('show_more', Math.min(PICKER_PAGE_SIZE, remaining))}
+           <span class="aft-show-more-count">+${remaining}</span>
+         </button>`
+      : '';
     return `
       <div class="aft-direction-block">
         <div class="aft-direction-header">
@@ -852,6 +882,7 @@ function renderAllFlightsSection() {
         <div class="aft-flights">
           ${cards || `<div class="aft-empty">${t('itin_noresult')}</div>`}
         </div>
+        ${moreBtn}
       </div>`;
   };
 
@@ -894,6 +925,15 @@ function renderAllFlightsSection() {
   section.querySelectorAll('.aft-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       activeTravelerId = Number(tab.dataset.tvl);
+      renderAllFlightsSection();
+    });
+  });
+
+  // "Mostrar más" — expand the column by another page.
+  section.querySelectorAll('.aft-show-more').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      pickerVisible[key] = (pickerVisible[key] || PICKER_PAGE_SIZE) + PICKER_PAGE_SIZE;
       renderAllFlightsSection();
     });
   });
@@ -1339,13 +1379,11 @@ const TAG_LABELS = {
 };
 
 let plannerActiveTag  = 'all';
-// Default to showing every destination — the OpenFlights 2017 route data is
-// incomplete (e.g., BCN → HKG, BCN → ICN aren't in it even though they fly),
-// so a strict "only directly reachable" filter hides legitimate options.
-// The reach badges still indicate which destinations are confirmed direct,
-// and the user can opt into the strict filter via the "Ver todos los
-// destinos" toggle (it now means "stop showing all — only reachable").
-let plannerShowAll    = true;
+// Default OFF — the planner starts showing only directly-reachable
+// destinations (curated Wikipedia route data is solid enough now to make
+// this useful). Users opt INTO the wider view via the toggle. Reach
+// badges still differentiate direct/some/loading on the visible cards.
+let plannerShowAll    = false;
 
 function renderPlanner() {
   const section = document.getElementById('plannerSection');

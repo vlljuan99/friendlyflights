@@ -17,14 +17,14 @@ jobs:
 
       - name: Build source tarball
         run: |
-          tar --exclude='.git' \
-              --exclude='.github' \
-              --exclude='node_modules' \
-              --exclude='.claude' \
-              --exclude='post-linkedin-*.md' \
-              --exclude='deploy/server-compose.yml' \
-              --exclude='deploy/friendlyflights.caddy' \
-              -czf src.tar.gz .
+          tar --exclude='./.git' \
+              --exclude='./.github' \
+              --exclude='./node_modules' \
+              --exclude='./.claude' \
+              --exclude='./post-linkedin-*.md' \
+              --exclude='./deploy/server-compose.yml' \
+              --exclude='./deploy/friendlyflights.caddy' \
+              -czf "${RUNNER_TEMP}/src.tar.gz" .
 
       - name: Setup SSH
         env:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Upload tarball + deploy files
         run: |
-          scp -i ~/.ssh/id_ed25519 src.tar.gz root@167.233.99.156:/opt/friendlyflights/src.tar.gz
+          scp -i ~/.ssh/id_ed25519 "${RUNNER_TEMP}/src.tar.gz" root@167.233.99.156:/opt/friendlyflights/src.tar.gz
           scp -i ~/.ssh/id_ed25519 deploy/server-compose.yml root@167.233.99.156:/opt/friendlyflights/docker-compose.yml
           scp -i ~/.ssh/id_ed25519 deploy/build-on-server.sh root@167.233.99.156:/opt/friendlyflights/build-on-server.sh
           scp -i ~/.ssh/id_ed25519 deploy/friendlyflights.caddy root@167.233.99.156:/opt/tilestudio/sites/friendlyflights.caddy

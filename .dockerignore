@@ -13,3 +13,5 @@ Thumbs.db
 *.log
 README.md
 DEPLOY.md
+deploy/
+post-linkedin-*.md

@@ -1,0 +1,16 @@
+name: friendlyflights
+
+services:
+  app:
+    image: friendlyflights:latest
+    container_name: friendlyflights-app
+    restart: unless-stopped
+    environment:
+      PORT: "3001"
+      PYTHON_BIN: python3
+    networks:
+      - tilestudio_default
+
+networks:
+  tilestudio_default:
+    external: true

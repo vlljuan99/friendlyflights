@@ -1,0 +1,10 @@
+friendlyflights.es, www.friendlyflights.es {
+	encode gzip
+	reverse_proxy friendlyflights-app:3001
+}
+
+# Fallback para pruebas antes de que se propague el DNS del dominio real.
+http://friendlyflights.167-233-99-156.sslip.io {
+	encode gzip
+	reverse_proxy friendlyflights-app:3001
+}

@@ -26,30 +26,27 @@ jobs:
               --exclude='./deploy/friendlyflights.caddy' \
               -czf "${RUNNER_TEMP}/src.tar.gz" .
 
-      - name: Setup SSH
-        env:
-          SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          # Strip CR (Notepad pastes CRLF) and ensure trailing newline — OpenSSH refuses
-          # ed25519 keys without a clean LF-only format.
-          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H 167.233.99.156 >> ~/.ssh/known_hosts
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: Trust host key
+        run: ssh-keyscan -H 167.233.99.156 >> ~/.ssh/known_hosts
 
       - name: Upload tarball + deploy files
         run: |
-          scp -i ~/.ssh/id_ed25519 "${RUNNER_TEMP}/src.tar.gz" root@167.233.99.156:/opt/friendlyflights/src.tar.gz
-          scp -i ~/.ssh/id_ed25519 deploy/server-compose.yml root@167.233.99.156:/opt/friendlyflights/docker-compose.yml
-          scp -i ~/.ssh/id_ed25519 deploy/build-on-server.sh root@167.233.99.156:/opt/friendlyflights/build-on-server.sh
-          scp -i ~/.ssh/id_ed25519 deploy/friendlyflights.caddy root@167.233.99.156:/opt/tilestudio/sites/friendlyflights.caddy
+          scp "${RUNNER_TEMP}/src.tar.gz" root@167.233.99.156:/opt/friendlyflights/src.tar.gz
+          scp deploy/server-compose.yml root@167.233.99.156:/opt/friendlyflights/docker-compose.yml
+          scp deploy/build-on-server.sh root@167.233.99.156:/opt/friendlyflights/build-on-server.sh
+          scp deploy/friendlyflights.caddy root@167.233.99.156:/opt/tilestudio/sites/friendlyflights.caddy
 
       - name: Build image and restart container
         run: |
-          ssh -i ~/.ssh/id_ed25519 root@167.233.99.156 \
+          ssh root@167.233.99.156 \
             'chmod +x /opt/friendlyflights/build-on-server.sh && /opt/friendlyflights/build-on-server.sh'
 
       - name: Reload Caddy
         run: |
-          ssh -i ~/.ssh/id_ed25519 root@167.233.99.156 \
+          ssh root@167.233.99.156 \
             'docker exec tilestudio-caddy-1 caddy reload --config /etc/caddy/Caddyfile'

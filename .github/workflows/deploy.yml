@@ -50,3 +50,20 @@ jobs:
         run: |
           ssh root@167.233.99.156 \
             'docker exec tilestudio-caddy-1 caddy reload --config /etc/caddy/Caddyfile'
+
+      # ── Smoke test — verify the app is up after deploy ────────────
+      # Retries for up to 60 s to allow the container to finish starting.
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 6); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://friendlyflights.es/)
+            AIRPORTS=$(curl -s -o /dev/null -w "%{http_code}" https://friendlyflights.es/api/airports)
+            if [ "$STATUS" = "200" ] && [ "$AIRPORTS" = "200" ]; then
+              echo "Smoke test passed (attempt $i): / → $STATUS, /api/airports → $AIRPORTS"
+              exit 0
+            fi
+            echo "Attempt $i: / → $STATUS, /api/airports → $AIRPORTS — retrying in 10 s..."
+            sleep 10
+          done
+          echo "Smoke test FAILED after 60 s"
+          exit 1

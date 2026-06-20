@@ -10,13 +10,13 @@
 */
 
 'use strict';
-const express  = require('express');
-const path     = require('path');
-const fs       = require('fs');
+const express      = require('express');
+const path         = require('path');
+const fs           = require('fs');
+const helmet       = require('helmet');
+const rateLimit    = require('express-rate-limit');
 
 // ── Minimal .env loader (zero-dependency) ─────────────────────────
-// Loads KEY=VALUE pairs from a local .env file into process.env without
-// overwriting variables already set in the real environment.
 (function loadDotEnv() {
   try {
     const envPath = path.join(__dirname, '.env');
@@ -34,14 +34,87 @@ const fs       = require('fs');
 const { searchFlights }      = require('./flightSearch');
 const { captureBookingUrl }  = require('./bookingCapture');
 
+// ── Structured logger (adds ISO timestamp + level prefix) ─────────
+const log = {
+  info:  (...a) => console.log( `[${new Date().toISOString()}] INFO `, ...a),
+  warn:  (...a) => console.warn( `[${new Date().toISOString()}] WARN `, ...a),
+  error: (...a) => console.error(`[${new Date().toISOString()}] ERROR`, ...a),
+};
+
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+// ── Minimal HTTP request logger ───────────────────────────────────
 app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+    log[level](`${req.method} ${req.path} ${res.statusCode} ${ms}ms`);
+  });
+  next();
+});
+
+// ── Security headers (Helmet + custom CSP) ────────────────────────
+// html2canvas is loaded from cdnjs; Inter font from Google Fonts.
+// SRI is added in index.html for html2canvas (see there).
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:     ["'self'"],
+      scriptSrc:      ["'self'", 'cdnjs.cloudflare.com'],
+      styleSrc:       ["'self'", "'unsafe-inline'", 'fonts.googleapis.com'],
+      fontSrc:        ["'self'", 'fonts.gstatic.com'],
+      imgSrc:         ["'self'", 'data:', 'upload.wikimedia.org'],
+      connectSrc:     ["'self'"],
+      frameSrc:       ["'none'"],
+      objectSrc:      ["'none'"],
+      baseUri:        ["'self'"],
+      formAction:     ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,  // needed for html2canvas cross-origin images
+}));
+
+// ── CORS — only needed for /api/* (static files don't need it) ────
+app.use('/api', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   next();
 });
-app.use(express.static(path.join(__dirname)));
+
+// ── Rate limiting ─────────────────────────────────────────────────
+// /api/flights and /api/book spin up Playwright (expensive). Limit
+// generously so real users never notice, but DoS becomes impractical.
+const heavyLimiter = rateLimit({
+  windowMs: 60 * 1000,   // 1 minute
+  max: 20,               // 20 requests/min per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please wait a minute and try again.' },
+});
+const lightLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please wait a minute and try again.' },
+});
+
+app.use('/api/flights', heavyLimiter);
+app.use('/api/book',    heavyLimiter);
+app.use('/api',         lightLimiter);
+
+// ── Static assets with cache headers ──────────────────────────────
+app.use(express.static(path.join(__dirname), {
+  setHeaders(res, filePath) {
+    const ext = path.extname(filePath);
+    if (['.css', '.js', '.svg', '.json', '.png', '.webp'].includes(ext)) {
+      // Versioned assets (hashed in name) can be cached long; unversioned use
+      // a short window so deploys propagate quickly.
+      res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    }
+  },
+}));
 
 // ─────────────────────────────────────────────────────────────────
 // Routes index — loaded once at startup from OpenFlights routes.dat
@@ -65,10 +138,10 @@ async function loadRoutesData() {
         count += index[origin].size;
       }
       routesIndex = index;
-      console.log(`[routes] Loaded ${count.toLocaleString()} curated routes from data/routes.json (${Object.keys(index).length} origin airports)`);
+      log.info(`[routes] Loaded ${count.toLocaleString()} curated routes from data/routes.json (${Object.keys(index).length} origin airports)`);
       return;
     } catch (err) {
-      console.warn(`[routes] data/routes.json present but unreadable: ${err.message} — falling back to OpenFlights`);
+      log.warn(`[routes] data/routes.json present but unreadable: ${err.message} — falling back to OpenFlights`);
     }
   }
 
@@ -95,10 +168,10 @@ async function loadRoutesData() {
     }
 
     routesIndex = index;
-    console.log(`[routes] Loaded ${count.toLocaleString()} routes from OpenFlights 2017 fallback (${Object.keys(index).length} origin airports)`);
-    console.log(`[routes] Tip: run \`python scripts/build_routes.py\` to build a fresher data/routes.json from Wikipedia.`);
+    log.info(`[routes] Loaded ${count.toLocaleString()} routes from OpenFlights 2017 fallback (${Object.keys(index).length} origin airports)`);
+    log.info('[routes] Tip: run `python scripts/build_routes.py` to build a fresher data/routes.json from Wikipedia.');
   } catch (err) {
-    console.warn(`[routes] Could not load OpenFlights data: ${err.message} — destination filter will show all airports`);
+    log.warn(`[routes] Could not load OpenFlights data: ${err.message} — destination filter will show all airports`);
   }
 }
 
@@ -162,9 +235,9 @@ async function loadAirportsData() {
       }
     }
     airportsIndex = index;
-    console.log(`[airports] Loaded ${count} IATA airports from OpenFlights`);
+    log.info(`[airports] Loaded ${count} IATA airports from OpenFlights`);
   } catch (err) {
-    console.warn(`[airports] Could not load OpenFlights data: ${err.message} — frontend will use built-in fallback list`);
+    log.warn(`[airports] Could not load OpenFlights data: ${err.message} — frontend will use built-in fallback list`);
   }
 }
 loadAirportsData();
@@ -196,17 +269,24 @@ app.get('/api/flights', async (req, res) => {
   if (!origin || !dest || !date) {
     return res.status(400).json({ error: 'Missing: origin, dest, date' });
   }
+  // Validate date format (YYYY-MM-DD) and that it is a real calendar date.
+  const dateStr = String(date).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || isNaN(Date.parse(dateStr))) {
+    return res.status(400).json({ error: 'Invalid date — expected YYYY-MM-DD', flights: [] });
+  }
+  // Validate IATA codes (3 uppercase letters).
+  const originStr = String(origin).trim().toUpperCase();
+  const destStr   = String(dest).trim().toUpperCase();
+  if (!/^[A-Z]{3}$/.test(originStr) || !/^[A-Z]{3}$/.test(destStr)) {
+    return res.status(400).json({ error: 'Invalid IATA code — expected 3 letters', flights: [] });
+  }
   try {
-    const flights = await searchFlights(
-      origin.trim().toUpperCase(),
-      dest.trim().toUpperCase(),
-      date.trim()
-    );
+    const flights = await searchFlights(originStr, destStr, dateStr);
     const source = flights[0]?.source ?? 'none';
-    console.log(`  ✈  ${origin}→${dest}: ${flights.length} flights (${source})`);
+    log.info(`✈  ${origin}→${dest}: ${flights.length} flights (${source})`);
     res.json({ flights });
   } catch (err) {
-    console.error('[/api/flights]', err.message);
+    log.error('[/api/flights]', err.message);
     res.status(500).json({ error: err.message, flights: [] });
   }
 });
@@ -239,7 +319,7 @@ app.get('/api/book', async (req, res) => {
     ]);
     res.redirect(302, url);
   } catch (err) {
-    console.warn(`[/api/book] ${origin}→${dest} ${date} ${depTime} — ${err.message}; using fallback`);
+    log.warn(`[/api/book] ${origin}→${dest} ${date} ${depTime} — ${err.message}; using fallback`);
     res.redirect(302, fb);
   }
 });
@@ -280,5 +360,5 @@ app.get('/api/imgproxy', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n✈  FriendlyFlights → http://localhost:${PORT}\n`);
+  log.info(`✈  FriendlyFlights → http://localhost:${PORT}`);
 });

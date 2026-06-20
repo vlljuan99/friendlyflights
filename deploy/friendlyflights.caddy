@@ -1,5 +1,9 @@
 friendlyflights.es, www.friendlyflights.es {
-	encode gzip
+	encode zstd gzip
+
+	# Enforce HTTPS — HSTS 1 year, includeSubDomains
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
 	reverse_proxy friendlyflights-app:3001
 }
 

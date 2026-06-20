@@ -7,109 +7,155 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0770e3" />
+
   <title>FriendlyFlights — Group flights made easy</title>
+  <meta name="description" content="Everyone in your group searches from their own city. FriendlyFlights finds the best combined trip — same destination, same dates, lowest total cost — automatically." />
+  <link rel="canonical" href="https://friendlyflights.es/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://friendlyflights.es/" />
+  <meta property="og:site_name"   content="FriendlyFlights" />
+  <meta property="og:title"       content="FriendlyFlights — Group flights made easy" />
+  <meta property="og:description" content="Everyone searches from their own city. We find the best flight combination for the whole group — automatically." />
+  <meta property="og:image"       content="https://friendlyflights.es/icon.svg" />
+  <meta property="og:locale"      content="en_GB" />
+  <meta property="og:locale:alternate" content="es_ES" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card"        content="summary" />
+  <meta name="twitter:title"       content="FriendlyFlights — Group flights made easy" />
+  <meta name="twitter:description" content="Everyone searches from their own city. We find the best flight combination for the whole group — automatically." />
+  <meta name="twitter:image"       content="https://friendlyflights.es/icon.svg" />
+
+  <!-- JSON-LD structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "FriendlyFlights",
+    "url": "https://friendlyflights.es/",
+    "description": "Multi-origin group flight search. Everyone in your group searches from their own city and we find the best combined trip automatically.",
+    "applicationCategory": "TravelApplication",
+    "operatingSystem": "All",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "inLanguage": ["en", "es"]
+  }
+  </script>
+
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/svg+xml" href="/icon.svg" />
   <link rel="apple-touch-icon" href="/icon.svg" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+  <!-- Google Fonts — external request (noted in privacy policy) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-<nav class="navbar">
+<!-- Live region: announced to screen readers when search results arrive -->
+<div id="a11yAnnouncer" aria-live="polite" aria-atomic="true"
+     style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></div>
+
+<nav class="navbar" aria-label="Main navigation">
   <div class="nav-inner">
-    <div class="logo" id="navLogo" role="button" tabindex="0" title="Home">
-      <span class="logo-icon">✈</span>
+    <div class="logo" id="navLogo" role="button" tabindex="0" title="Home" aria-label="FriendlyFlights — go to home">
+      <span class="logo-icon" aria-hidden="true">✈</span>
       <span class="logo-text">FriendlyFlights</span>
     </div>
     <div class="nav-links">
       <a href="#howSection" data-i18n="nav_how">How it works</a>
       <div class="my-trips-wrap">
-        <button class="btn-trips" id="myTripsBtn" type="button" aria-haspopup="true" aria-expanded="false">
-          <span class="my-trips-icon">⭐</span>
+        <button class="btn-trips" id="myTripsBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="myTripsDropdown">
+          <span class="my-trips-icon" aria-hidden="true">⭐</span>
           <span class="my-trips-text" data-i18n="my_trips_label">My trips</span>
-          <span class="my-trips-count" id="myTripsCount"></span>
+          <span class="my-trips-count" id="myTripsCount" aria-live="polite"></span>
         </button>
       </div>
       <div class="my-trips-backdrop" id="myTripsBackdrop"></div>
-      <div class="my-trips-dropdown" id="myTripsDropdown" role="menu"></div>
+      <div class="my-trips-dropdown" id="myTripsDropdown" role="menu" aria-label="My trips"></div>
       <div class="lang-switcher" id="langSwitcher" role="tablist" aria-label="Language">
-        <button class="lang-pill" data-lang="es" type="button">🇪🇸 ES</button>
-        <button class="lang-pill" data-lang="en" type="button">🇬🇧 EN</button>
+        <button class="lang-pill" data-lang="es" type="button" role="tab" aria-label="Español">🇪🇸 ES</button>
+        <button class="lang-pill" data-lang="en" type="button" role="tab" aria-label="English">🇬🇧 EN</button>
       </div>
     </div>
   </div>
 </nav>
 
 <header class="hero">
-  <div class="hero-bg"></div>
+  <div class="hero-bg" aria-hidden="true"></div>
   <div class="hero-content">
     <h1 data-i18n-html="hero_h1">Fly together from <em>anywhere</em></h1>
     <p class="hero-sub" data-i18n="hero_sub">Everyone searches from their own city. We find the best flight combination for the whole group — automatically.</p>
   </div>
 </header>
 
-<section class="search-panel-section">
+<section class="search-panel-section" aria-label="Flight search">
   <div class="search-panel" id="searchPanel">
     <div class="panel-header">
       <h2 data-i18n="panel_h2">Where is everyone flying from?</h2>
       <p class="panel-sub" data-i18n="panel_sub">Add each traveler and their departure city</p>
     </div>
 
-    <div class="travelers-list" id="travelersList"></div>
+    <div class="travelers-list" id="travelersList" aria-label="Travelers"></div>
 
-    <button class="btn-add-traveler" id="addTravelerBtn">
-      <span class="plus">+</span> <span data-i18n="add_traveler">Add another traveler</span>
+    <button class="btn-add-traveler" id="addTravelerBtn" type="button">
+      <span class="plus" aria-hidden="true">+</span> <span data-i18n="add_traveler">Add another traveler</span>
     </button>
 
     <div class="destination-row">
       <div class="field-group">
-        <label data-i18n="flying_to">Flying to</label>
+        <label for="destinationInput" data-i18n="flying_to">Flying to</label>
         <div class="airport-input-wrap">
-          <span class="field-icon">📍</span>
-          <input type="text" id="destinationInput" placeholder="Destination city or airport"
-            autocomplete="off" data-i18n-ph="dest_placeholder" />
-          <div class="airport-dropdown" id="destDropdown"></div>
+          <span class="field-icon" aria-hidden="true">📍</span>
+          <input type="text" id="destinationInput"
+            placeholder="Destination city or airport"
+            autocomplete="off"
+            aria-autocomplete="list"
+            aria-controls="destDropdown"
+            data-i18n-ph="dest_placeholder" />
+          <div class="airport-dropdown" id="destDropdown" role="listbox" aria-label="Destination suggestions"></div>
         </div>
       </div>
     </div>
 
-    <button class="planner-cta-banner" id="plannerCtaBanner" type="button" style="display:none">
-      <span class="planner-cta-icon">🗺️</span>
+    <button class="planner-cta-banner" id="plannerCtaBanner" type="button" style="display:none" aria-label="Open destination planner">
+      <span class="planner-cta-icon" aria-hidden="true">🗺️</span>
       <span class="planner-cta-body">
         <span class="planner-cta-text" data-i18n="planner_cta">Not sure where to go? Discover destinations below</span>
         <span class="planner-cta-hint" data-i18n="planner_cta_hint">See where everyone in your group can meet</span>
       </span>
-      <span class="planner-cta-arrow">↓</span>
+      <span class="planner-cta-arrow" aria-hidden="true">↓</span>
     </button>
 
     <div class="dates-row">
       <div class="field-group">
-        <label class="date-label-row">
+        <label class="date-label-row" for="departureDate">
           <span data-i18n="dep_date">Departure date</span>
           <select class="flex-select" id="flexDep" aria-label="Flexible departure days"></select>
         </label>
         <div class="date-input-wrap">
-          <span class="field-icon">📅</span>
-          <input type="date" id="departureDate" />
+          <span class="field-icon" aria-hidden="true">📅</span>
+          <input type="date" id="departureDate" aria-label="Departure date" />
         </div>
       </div>
       <div class="field-group">
-        <label class="date-label-row">
+        <label class="date-label-row" for="returnDate">
           <span><span data-i18n="ret_date">Return date</span> <span class="optional" data-i18n="optional">(optional)</span></span>
           <select class="flex-select" id="flexRet" aria-label="Flexible return days"></select>
         </label>
         <div class="date-input-wrap">
-          <span class="field-icon">📅</span>
-          <input type="date" id="returnDate" />
+          <span class="field-icon" aria-hidden="true">📅</span>
+          <input type="date" id="returnDate" aria-label="Return date (optional)" />
         </div>
       </div>
     </div>
 
     <div class="search-actions">
-      <button class="btn-search" id="searchBtn">
-        <span class="search-icon">🔍</span>
+      <button class="btn-search" id="searchBtn" type="button">
+        <span class="search-icon" aria-hidden="true">🔍</span>
         <span data-i18n="search_btn">Search flights for everyone</span>
       </button>
     </div>
@@ -117,7 +163,7 @@
 </section>
 
 <!-- RESULTS -->
-<section class="results-section" id="resultsSection" style="display:none">
+<section class="results-section" id="resultsSection" style="display:none" aria-label="Search results" aria-live="polite">
   <div class="results-inner">
 
     <!-- Header -->
@@ -128,50 +174,50 @@
       </div>
       <div class="results-header-actions">
         <button class="btn-save-trip" id="saveTripBtn" type="button" data-i18n="save_trip">⭐ Save trip</button>
-        <button class="btn-edit-search" id="editSearchBtn" data-i18n="edit_search">✏️ Edit search</button>
+        <button class="btn-edit-search" id="editSearchBtn" type="button" data-i18n="edit_search">✏️ Edit search</button>
       </div>
     </div>
 
-    <!-- Filters bar — visible no matter which view, so the direct-only toggle is always one tap away -->
+    <!-- Filters bar -->
     <div class="filters-bar" id="filtersBar">
       <label class="direct-switch" for="directOnlySwitch">
         <input type="checkbox" id="directOnlySwitch" />
-        <span class="direct-switch-track"><span class="direct-switch-knob"></span></span>
+        <span class="direct-switch-track" aria-hidden="true"><span class="direct-switch-knob"></span></span>
         <span class="direct-switch-label">
-          <span class="direct-switch-icon">✈</span>
+          <span class="direct-switch-icon" aria-hidden="true">✈</span>
           <span data-i18n="direct_only">Only direct flights</span>
         </span>
-        <span class="direct-switch-count" id="directSwitchCount"></span>
+        <span class="direct-switch-count" id="directSwitchCount" aria-live="polite"></span>
       </label>
     </div>
 
     <!-- Per-traveler itinerary (the chosen flights) -->
     <div class="itinerary-section" id="itinerarySection"></div>
 
-    <!-- Share — placed under the main itinerary, where it's clearly part of the result -->
+    <!-- Share -->
     <div class="share-bar" id="shareBar">
       <div class="share-bar-left">
-        <span class="share-bar-icon">💬</span>
+        <span class="share-bar-icon" aria-hidden="true">💬</span>
         <span class="share-bar-text" data-i18n="share_h3">Share with the group</span>
       </div>
       <div class="share-bar-buttons">
         <button class="btn-share btn-whatsapp" id="whatsappBtn" data-i18n="share_wa">WhatsApp</button>
-        <button class="btn-share btn-copy"     id="copyBtn"><span data-i18n="share_copy">Copy links</span></button>
-        <button class="btn-share btn-img"      id="imgBtn"><span data-i18n="save_img">📸 Save as image</span></button>
+        <button class="btn-share btn-copy" id="copyBtn"><span data-i18n="share_copy">Copy links</span></button>
+        <button class="btn-share btn-img" id="imgBtn"><span data-i18n="save_img">📸 Save as image</span></button>
       </div>
     </div>
 
-    <!-- View selector — pick which section to view -->
-    <div class="view-tabs" id="viewTabs" role="tablist"></div>
+    <!-- View selector -->
+    <div class="view-tabs" id="viewTabs" role="tablist" aria-label="Results view"></div>
 
     <!-- View: individual flights per traveler -->
-    <div class="results-view results-view-flights" id="resultsViewFlights">
+    <div class="results-view results-view-flights" id="resultsViewFlights" role="tabpanel">
       <div class="all-flights-section" id="allFlightsSection"></div>
       <div class="deep-links-section"  id="deepLinksSection"></div>
     </div>
 
     <!-- View: best group combinations -->
-    <div class="results-view results-view-combos" id="resultsViewCombos">
+    <div class="results-view results-view-combos" id="resultsViewCombos" role="tabpanel">
       <div class="sort-bar"   id="sortBar"></div>
       <div class="combo-grid" id="comboGrid"></div>
     </div>
@@ -180,12 +226,13 @@
 </section>
 
 <!-- DESTINATION INFO MODAL -->
-<div class="dest-modal-overlay" id="destModal" style="display:none" role="dialog" aria-modal="true">
+<div class="dest-modal-overlay" id="destModal" style="display:none"
+     role="dialog" aria-modal="true" aria-labelledby="destModalTitle" aria-describedby="destModalDesc">
   <div class="dest-modal">
-    <button class="dest-modal-close" id="destModalClose" aria-label="Close">✕</button>
+    <button class="dest-modal-close" id="destModalClose" aria-label="Close destination info">✕</button>
     <div class="dest-modal-img-wrap" id="destModalImgWrap">
-      <img class="dest-modal-img" id="destModalImg" src="" alt="" style="display:none" />
-      <div class="dest-modal-emoji-bg" id="destModalEmojiPlaceholder">
+      <img class="dest-modal-img" id="destModalImg" src="" alt="" loading="lazy" style="display:none" />
+      <div class="dest-modal-emoji-bg" id="destModalEmojiPlaceholder" aria-hidden="true">
         <span class="dest-modal-big-emoji" id="destModalEmoji"></span>
       </div>
     </div>
@@ -195,22 +242,22 @@
           <h2 class="dest-modal-title" id="destModalTitle"></h2>
           <p class="dest-modal-sub" id="destModalSub"></p>
         </div>
-        <span class="dest-modal-vibe" id="destModalVibe"></span>
+        <span class="dest-modal-vibe" id="destModalVibe" aria-label="Destination vibe"></span>
       </div>
-      <p class="dest-modal-desc" id="destModalDesc"><span class="dest-modal-loading">···</span></p>
+      <p class="dest-modal-desc" id="destModalDesc"><span class="dest-modal-loading" aria-label="Loading description">···</span></p>
       <div class="dest-modal-tags" id="destModalTags"></div>
       <div class="dest-modal-actions">
-        <a class="dest-modal-wiki" id="destModalWiki" href="#" target="_blank" rel="noopener" style="display:none">Wikipedia →</a>
-        <button class="dest-plan-btn dest-modal-plan" id="destModalPlan">Plan trip →</button>
+        <a class="dest-modal-wiki" id="destModalWiki" href="#" target="_blank" rel="noopener noreferrer" style="display:none">Wikipedia →</a>
+        <button class="dest-plan-btn dest-modal-plan" id="destModalPlan" type="button">Plan trip →</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- LOADING -->
-<div class="loading-overlay" id="loadingOverlay" style="display:none">
+<div class="loading-overlay" id="loadingOverlay" style="display:none" role="status" aria-live="polite" aria-label="Searching flights">
   <div class="loading-card">
-    <div class="spinner"></div>
+    <div class="spinner" aria-hidden="true"></div>
     <p class="loading-text" id="loadingText" data-i18n="loading_text">Searching…</p>
     <div class="loading-travelers" id="loadingTravelers"></div>
     <p class="loading-note" data-i18n="loading_note">Fetching live prices from Google Flights — this may take ~20 s per route</p>
@@ -218,29 +265,29 @@
 </div>
 
 <!-- DESTINATION PLANNER -->
-<section class="planner-section" id="plannerSection"></section>
+<section class="planner-section" id="plannerSection" aria-label="Destination planner"></section>
 
-<section class="how-section" id="howSection">
+<section class="how-section" id="howSection" aria-labelledby="howTitle">
   <div class="how-inner">
-    <h2 data-i18n="hiw_title">How it works</h2>
+    <h2 id="howTitle" data-i18n="hiw_title">How it works</h2>
     <div class="steps">
       <div class="step">
-        <div class="step-icon">👥</div>
+        <div class="step-icon" aria-hidden="true">👥</div>
         <h3 data-i18n="hiw_1_h">Add your crew</h3>
         <p data-i18n="hiw_1_p">Enter each friend's name and their nearest airport.</p>
       </div>
       <div class="step">
-        <div class="step-icon">🗺️</div>
+        <div class="step-icon" aria-hidden="true">🗺️</div>
         <h3 data-i18n="hiw_2_h">Pick a destination</h3>
         <p data-i18n="hiw_2_p">Choose any city as your meeting point.</p>
       </div>
       <div class="step">
-        <div class="step-icon">🔍</div>
+        <div class="step-icon" aria-hidden="true">🔍</div>
         <h3 data-i18n="hiw_3_h">We search Skyscanner</h3>
         <p data-i18n="hiw_3_p">A real browser fetches flight prices for each traveler — no fake data.</p>
       </div>
       <div class="step">
-        <div class="step-icon">🏆</div>
+        <div class="step-icon" aria-hidden="true">🏆</div>
         <h3 data-i18n="hiw_4_h">Best combo ranked</h3>
         <p data-i18n="hiw_4_p">We score every combination by total price + max travel time, so the whole group wins.</p>
       </div>
@@ -250,17 +297,34 @@
 
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-logo" id="footerLogo" role="button" tabindex="0" title="Home">
-      <span class="logo-icon">✈</span>
+    <div class="footer-logo" id="footerLogo" role="button" tabindex="0" title="Home" aria-label="FriendlyFlights — go to home">
+      <span class="logo-icon" aria-hidden="true">✈</span>
       <span class="logo-text">FriendlyFlights</span>
     </div>
     <p class="footer-note" data-i18n="footer_note">Prices fetched live from Google Flights · airline fallbacks for budget routes</p>
+    <nav class="footer-legal" aria-label="Legal links">
+      <a href="/aviso-legal.html" data-i18n="legal_notice">Legal notice</a>
+      <span aria-hidden="true">·</span>
+      <a href="/politica-privacidad.html" data-i18n="privacy_policy">Privacy policy</a>
+    </nav>
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+<!-- html2canvas served locally (no external request; SRI not needed) -->
+<script src="/html2canvas.min.js"></script>
 <script src="i18n.js"></script>
 <script src="destinations.js"></script>
 <script src="app.js"></script>
+
+<!-- Service Worker registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function (err) {
+        console.warn('[SW] Registration failed:', err);
+      });
+    });
+  }
+</script>
 </body>
 </html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de privacidad — FriendlyFlights</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    .legal-wrap { max-width: 760px; margin: 0 auto; padding: 6rem 1.5rem 4rem; line-height: 1.7; }
+    .legal-wrap h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .legal-wrap h2 { font-size: 1.2rem; margin-top: 2rem; }
+    .legal-wrap p, .legal-wrap ul { color: #444; margin: 0.75rem 0; }
+    .legal-wrap ul { padding-left: 1.5rem; }
+    .legal-wrap a { color: #0770e3; }
+    .legal-wrap table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.9rem; }
+    .legal-wrap th, .legal-wrap td { border: 1px solid #ddd; padding: 0.6rem 0.8rem; text-align: left; }
+    .legal-wrap th { background: #f5f5f5; }
+    .back-link { display:inline-block; margin-bottom:2rem; color:#0770e3; text-decoration:none; }
+    .back-link:hover { text-decoration:underline; }
+    .badge { display:inline-block; padding:0.15rem 0.5rem; border-radius:999px; font-size:0.75rem; font-weight:600; }
+    .badge-green  { background:#d1fae5; color:#065f46; }
+    .badge-yellow { background:#fef3c7; color:#92400e; }
+  </style>
+</head>
+<body>
+<nav class="navbar" aria-label="Main navigation">
+  <div class="nav-inner">
+    <a class="logo" href="/" aria-label="FriendlyFlights — volver al inicio">
+      <span class="logo-icon" aria-hidden="true">✈</span>
+      <span class="logo-text">FriendlyFlights</span>
+    </a>
+  </div>
+</nav>
+
+<main class="legal-wrap">
+  <a class="back-link" href="/">← Volver</a>
+  <h1>Política de privacidad</h1>
+  <p><em>Última actualización: junio de 2025</em></p>
+
+  <p>
+    FriendlyFlights (<strong>https://friendlyflights.es</strong>) es un proyecto personal de código abierto que ayuda a grupos de personas a encontrar vuelos desde distintas ciudades hacia un mismo destino. Esta política explica qué datos se tratan, dónde y por cuánto tiempo.
+  </p>
+
+  <h2>1. Responsable del tratamiento</h2>
+  <p>
+    El responsable es el titular del proyecto, accesible y contactable a través del repositorio público en <a href="https://github.com/FriendlyFlights" target="_blank" rel="noopener noreferrer">github.com/FriendlyFlights</a>.
+  </p>
+
+  <h2>2. ¿Qué datos se tratan y dónde?</h2>
+  <p>
+    FriendlyFlights <strong>no utiliza cookies</strong> ni rastrea a los usuarios entre sesiones. A continuación se describen todos los mecanismos de almacenamiento y transferencia de datos activos:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Mecanismo</th>
+        <th>Finalidad</th>
+        <th>Dónde se almacena</th>
+        <th>Duración</th>
+        <th>Base legal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>localStorage ff_lang</code></td>
+        <td>Recordar el idioma seleccionado (ES/EN)</td>
+        <td>Tu propio dispositivo</td>
+        <td>Indefinida (hasta borrar datos del navegador)</td>
+        <td>Interés legítimo — preferencia técnica del usuario</td>
+      </tr>
+      <tr>
+        <td><code>localStorage ff_recent_v1</code></td>
+        <td>Guardar las últimas 10 búsquedas recientes (sin datos personales del servidor)</td>
+        <td>Tu propio dispositivo</td>
+        <td>Indefinida (hasta borrar datos del navegador)</td>
+        <td>Interés legítimo — funcionalidad solicitada por el usuario</td>
+      </tr>
+      <tr>
+        <td><code>localStorage ff_saved_v1</code></td>
+        <td>Guardar hasta 30 viajes marcados como favoritos</td>
+        <td>Tu propio dispositivo</td>
+        <td>Indefinida (hasta borrar datos del navegador)</td>
+        <td>Interés legítimo — funcionalidad solicitada por el usuario</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    <span class="badge badge-green">Sin cookies</span>&nbsp;
+    Ninguno de estos datos se envía al servidor de FriendlyFlights ni a terceros. Se trata de almacenamiento local estrictamente técnico, exento de consentimiento según las directrices de la AEPD (Guía sobre el uso de cookies, 2023, art. 5.3 Directiva 2002/58/CE).
+  </p>
+
+  <h2>3. Datos enviados al servidor de FriendlyFlights</h2>
+  <p>
+    Cuando realizas una búsqueda de vuelos, el navegador envía al servidor los siguientes parámetros:
+  </p>
+  <ul>
+    <li>Códigos IATA de origen y destino (ej. <code>MAD</code>, <code>BCN</code>)</li>
+    <li>Fechas de ida y vuelta</li>
+    <li>Dirección IP (necesaria para el enrutamiento de la petición HTTP; no se registra de forma permanente)</li>
+  </ul>
+  <p>
+    Estos datos son procesados en tiempo real para consultar precios de vuelos y no se almacenan en base de datos. El servidor mantiene una caché en memoria de 10 minutos por ruta para reducir la latencia; esta caché se borra automáticamente al reiniciar el servicio.
+  </p>
+
+  <h2>4. Servicios de terceros</h2>
+
+  <h3>4.1 Google Fonts</h3>
+  <p>
+    <span class="badge badge-yellow">Transferencia a EE.UU.</span>&nbsp;
+    El sitio carga la tipografía Inter desde los servidores de Google Fonts (<code>fonts.googleapis.com</code>, <code>fonts.gstatic.com</code>). Al cargar la página, tu navegador realiza una solicitud a los servidores de Google, que pueden registrar tu dirección IP. Google actúa como responsable independiente del tratamiento; consulta la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">política de privacidad de Google</a>. La transferencia a EE.UU. está amparada en las Cláusulas Contractuales Tipo adoptadas por Google.
+  </p>
+
+  <h3>4.2 Google Flights / Skyscanner</h3>
+  <p>
+    El servidor de FriendlyFlights consulta los precios de vuelos accediendo de forma automatizada a Google Flights y Skyscanner en nombre del usuario. Las búsquedas incluyen los códigos de aeropuerto y fechas pero <strong>no incluyen datos personales identificables</strong>. Al hacer clic en un resultado para reservar, eres redirigido directamente al sitio de la aerolínea u operador; desde ese momento aplica la política de privacidad del proveedor externo.
+  </p>
+
+  <h3>4.3 Wikimedia Commons</h3>
+  <p>
+    Las imágenes de destinos se cargan a través de un proxy propio (<code>/api/imgproxy</code>) que las obtiene de <code>upload.wikimedia.org</code>. El proxy realiza la solicitud desde el servidor de FriendlyFlights, de modo que tu dirección IP no se transfiere directamente a Wikimedia. El servidor añade un encabezado <code>Referer</code> indicando que la imagen procede de este sitio, conforme a los requisitos de atribución de Wikimedia.
+  </p>
+
+  <h2>5. Derechos del usuario</h2>
+  <p>
+    Dado que FriendlyFlights no almacena datos personales identificables en sus servidores, no es posible ejercer derechos de acceso, rectificación o supresión sobre datos en el servidor. Puedes eliminar en cualquier momento los datos almacenados en tu dispositivo borrando los datos del sitio en la configuración de tu navegador.
+  </p>
+  <p>
+    Para cualquier consulta sobre privacidad, puedes contactar con el responsable a través del repositorio de GitHub o presentar una reclamación ante la <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">Agencia Española de Protección de Datos (AEPD)</a>.
+  </p>
+
+  <h2>6. Cambios en esta política</h2>
+  <p>
+    Esta política puede actualizarse para reflejar cambios en el servicio. La fecha de última actualización figura al inicio del documento. El uso continuado del sitio tras una actualización implica la aceptación de la nueva versión.
+  </p>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <nav class="footer-legal" aria-label="Legal links">
+      <a href="/aviso-legal.html">Aviso legal</a>
+      <span aria-hidden="true">·</span>
+      <a href="/politica-privacidad.html">Política de privacidad</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

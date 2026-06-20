@@ -41,9 +41,12 @@ var STRINGS = {
     search_btn:        'Search flights for everyone',
 
     // ── Traveler row ──────────────────────────────────────────────
-    traveler_name_ph: 'Name',
-    airport_ph:       'Departure city or airport',
-    pax_label:        'pax',
+    traveler_name_ph:  'Name',
+    airport_ph:        'Departure city or airport',
+    pax_label:         'pax',
+    pax_decrease:      function (name) { return 'Decrease passengers for ' + name; },
+    pax_increase:      function (name) { return 'Increase passengers for ' + name; },
+    remove_traveler:   function (name) { return 'Remove traveler ' + name; },
 
     // ── Flexible dates ────────────────────────────────────────────
     flex_label:        '±2 days',
@@ -212,7 +215,9 @@ var STRINGS = {
     hiw_4_p: 'We score every combination by total price + max travel time, so the whole group wins.',
 
     // ── Footer ────────────────────────────────────────────────────
-    footer_note: 'Prices fetched live from Google Flights · airline fallbacks for budget routes',
+    footer_note:    'Prices fetched live from Google Flights · airline fallbacks for budget routes',
+    legal_notice:   'Legal notice',
+    privacy_policy: 'Privacy policy',
   },
 
   es: {
@@ -248,9 +253,12 @@ var STRINGS = {
     search_btn:        'Buscar vuelos para todos',
 
     // ── Traveler row ──────────────────────────────────────────────
-    traveler_name_ph: 'Nombre',
-    airport_ph:       'Ciudad o aeropuerto de salida',
-    pax_label:        'pax',
+    traveler_name_ph:  'Nombre',
+    airport_ph:        'Ciudad o aeropuerto de salida',
+    pax_label:         'pax',
+    pax_decrease:      function (name) { return 'Reducir pasajeros de ' + name; },
+    pax_increase:      function (name) { return 'Aumentar pasajeros de ' + name; },
+    remove_traveler:   function (name) { return 'Eliminar viajero ' + name; },
 
     // ── Flexible dates ────────────────────────────────────────────
     flex_label:        '±2 días',
@@ -419,7 +427,9 @@ var STRINGS = {
     hiw_4_p: 'Puntuamos cada combinación por precio total + tiempo de vuelo máximo, para que gane todo el grupo.',
 
     // ── Footer ────────────────────────────────────────────────────
-    footer_note: 'Precios en tiempo real de Google Flights · aerolíneas alternativas para rutas económicas',
+    footer_note:    'Precios en tiempo real de Google Flights · aerolíneas alternativas para rutas económicas',
+    legal_notice:   'Aviso legal',
+    privacy_policy: 'Política de privacidad',
   },
 };
 
@@ -513,6 +523,9 @@ function setLang(lang) {
 }
 
 function applyI18n() {
+  // Sync the <html lang> attribute so assistive technology announces the correct language.
+  document.documentElement.lang = currentLang;
+
   // Text content
   document.querySelectorAll('[data-i18n]').forEach(function (el) {
     el.textContent = t(el.getAttribute('data-i18n'));

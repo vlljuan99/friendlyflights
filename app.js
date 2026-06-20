@@ -247,13 +247,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('plannerSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
-  // Destination info modal — close handlers
+  // Destination info modal — close handlers + focus management
   document.getElementById('destModalClose').addEventListener('click', closeDestinationModal);
   document.getElementById('destModal').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeDestinationModal();
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeDestinationModal();
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('destModal');
+      if (modal && modal.style.display !== 'none') closeDestinationModal();
+    }
+    if (e.key === 'Tab') _modalFocusTrap(e);
   });
 
   setupAirportAutocomplete(
@@ -350,19 +354,25 @@ function renderTravelers() {
           placeholder="${t('traveler_name_ph')}" data-id="${tvl.id}" />
       </div>
       <div class="airport-input-wrap">
-        <span class="field-icon">✈</span>
+        <span class="field-icon" aria-hidden="true">✈</span>
         <input type="text" placeholder="${t('airport_ph')}" autocomplete="off"
+          aria-label="${t('airport_ph')}"
+          aria-autocomplete="list" aria-controls="${dropId}"
           class="traveler-airport-input" data-id="${tvl.id}"
           value="${tvl.airportCity ? tvl.airportCity + ' (' + tvl.airportCode + ')' : ''}" />
-        <div class="airport-dropdown" id="${dropId}"></div>
+        <div class="airport-dropdown" role="listbox" id="${dropId}"
+          aria-label="${t('airport_ph')} suggestions"></div>
       </div>
       <div class="pax-stepper" title="Number of passengers">
-        <button class="pax-btn pax-minus" data-id="${tvl.id}">−</button>
-        <span class="pax-count" data-id="${tvl.id}">${tvl.pax}</span>
-        <button class="pax-btn pax-plus"  data-id="${tvl.id}">+</button>
+        <button class="pax-btn pax-minus" data-id="${tvl.id}"
+          aria-label="${t('pax_decrease', escHtml(tvl.name) || 'traveler')}">−</button>
+        <span class="pax-count" data-id="${tvl.id}" aria-live="polite">${tvl.pax}</span>
+        <button class="pax-btn pax-plus" data-id="${tvl.id}"
+          aria-label="${t('pax_increase', escHtml(tvl.name) || 'traveler')}">+</button>
         <span class="pax-label">${t('pax_label')}</span>
       </div>
-      <button class="btn-remove" data-id="${tvl.id}">✕</button>`;
+      <button class="btn-remove" data-id="${tvl.id}"
+        aria-label="${t('remove_traveler', escHtml(tvl.name) || 'traveler')}">✕</button>`;
     list.appendChild(row);
 
     row.querySelector('.traveler-name-input').addEventListener('input', e => {
@@ -554,13 +564,18 @@ async function runSearch() {
 
 async function fetchRoute(origin, dest, date, rowId) {
   markLoadingActive(rowId);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000); // 60 s hard timeout
   try {
     const params = new URLSearchParams({ origin, dest, date });
-    const res    = await fetch(`${API_BASE}/api/flights?${params}`);
+    const res    = await fetch(`${API_BASE}/api/flights?${params}`, { signal: controller.signal });
+    clearTimeout(timer);
     const data   = await res.json();
     markLoadingDone(rowId, data.flights?.length ?? 0, data.flights?.[0]?.source);
     return data.flights ?? [];
-  } catch {
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') console.warn(`[fetchRoute] timeout ${origin}→${dest}`);
     markLoadingDone(rowId, 0, null);
     return [];
   }
@@ -976,6 +991,16 @@ function renderResultsSection() {
   document.getElementById('resultsTitle').textContent    = `✈ ${destCity}`;
   document.getElementById('resultsSubtitle').textContent =
     `${t('travelers_label', travelers.length)} · ${depLabel}${retLabel} ${retDate ? t('round_trip') : t('one_way')}`;
+
+  // Announce results to screen readers via the live region in index.html.
+  const announcer = document.getElementById('a11yAnnouncer');
+  if (announcer) {
+    const total = travelers.reduce((s, tr) => s + (tr.flights?.length ?? 0), 0);
+    announcer.textContent = total > 0
+      ? t('travelers_label', travelers.length) + ' · ' + destCity + ' · ' + depLabel
+      : t('error_no_flights');
+    setTimeout(() => { if (announcer) announcer.textContent = ''; }, 3000);
+  }
 
   renderItinerarySection();
   renderAllFlightsSection();
@@ -1928,10 +1953,28 @@ async function shareAsImage() {
 
     const canvas = await html2canvas(section, {
       scale:           Math.min(2, window.devicePixelRatio || 2),
-      backgroundColor: '#f8f9fb',
+      backgroundColor: '#ffffff',
       useCORS:         true,
       logging:         false,
       allowTaint:      false,
+      // Exclude fixed/sticky elements (navbar, overlays, toasts) that html2canvas
+      // paints into the capture when the page is scrolled. Without this, the
+      // sticky navbar (rgba white, 92% opacity) overlays the itinerary and makes
+      // the image look washed-out / "filtered".
+      ignoreElements:  (el) =>
+        el.classList.contains('navbar') ||
+        el.id === 'loadingOverlay'      ||
+        el.id === 'destModal'           ||
+        el.classList.contains('toast')  ||
+        el.classList.contains('my-trips-dropdown'),
+      // Give the clone a solid white background and some padding so the image
+      // doesn't clip tightly to the element edge.
+      onclone: (_doc, cloneEl) => {
+        cloneEl.style.padding         = '24px';
+        cloneEl.style.background      = '#ffffff';
+        cloneEl.style.borderRadius    = '0';
+        cloneEl.style.marginBottom    = '0';
+      },
     });
     section.classList.remove('capturing');
     stylesHidden = false;
@@ -2054,7 +2097,10 @@ const SHARE_EMOJI = {
   link:  String.fromCodePoint(0x1F517),                        // 🔗
   out:   String.fromCodePoint(0x2197, 0xFE0F),                 // ↗️
   ret:   String.fromCodePoint(0x21A9, 0xFE0F),                 // ↩️
-  dots:  [0x1F535, 0x1F7E2, 0x1F7E0, 0x1F7E3, 0x1F7E1, 0x1F7E4].map(c => String.fromCodePoint(c)),
+  // 🔵🔴💚💜💛💙 — all Unicode 6.0 (2010), supported by every WhatsApp version.
+  // The colored-circle squares (🟢🟠🟣🟡🟤, Unicode 12, 2019) render as □ on
+  // older Android and WhatsApp < 2.19, so we avoid them entirely.
+  dots:  [0x1F535, 0x1F534, 0x1F49A, 0x1F49C, 0x1F49B, 0x1F499].map(c => String.fromCodePoint(c)),
 };
 
 function buildShareText() {
@@ -2228,19 +2274,52 @@ function showToast(message, isError = false) {
 // ──────────────────────────────────────────────
 // DESTINATION INFO MODAL
 // ──────────────────────────────────────────────
+// Tracks the element that opened the modal so focus can be returned on close.
+let _modalOpener = null;
+
 function closeDestinationModal() {
   document.getElementById('destModal').style.display = 'none';
   document.body.style.overflow = '';
+  if (_modalOpener && typeof _modalOpener.focus === 'function') {
+    _modalOpener.focus();
+    _modalOpener = null;
+  }
+}
+
+// Trap focus inside the modal while it is open.
+function _modalFocusTrap(e) {
+  const modal = document.getElementById('destModal');
+  if (!modal || modal.style.display === 'none') return;
+  const focusable = Array.from(
+    modal.querySelectorAll('a[href],button:not([disabled]),input,[tabindex]:not([tabindex="-1"])')
+  ).filter(el => el.offsetParent !== null);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last  = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
 }
 
 async function openDestinationInfo(code) {
   const dest = DESTINATIONS.find(d => d.code === code);
   if (!dest) return;
 
+  // Remember what triggered the modal open so we can return focus on close.
+  _modalOpener = document.activeElement;
+
   // Open modal immediately with placeholder content
   const modal = document.getElementById('destModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+
+  // Move focus into the modal (close button is the first focusable element).
+  const closeBtn = document.getElementById('destModalClose');
+  if (closeBtn) closeBtn.focus();
 
   // Emoji placeholder while image loads
   document.getElementById('destModalImg').style.display = 'none';
